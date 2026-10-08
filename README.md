@@ -40,10 +40,10 @@ modal run modal_app.py::a0 --mode t2i --trace    # torch-profiler trace (diagnos
 modal volume get qwen21-results <run_id> results/
 ```
 
-Editing with a single reference image (for example, the T2I output from a previous run):
+Editing with a single reference image (the recipe's `qwen_bear.png`, committed under `inputs/`):
 
 ```bash
-modal run modal_app.py::a0 --mode edit --image results/<t2i_run>/images/measured_0.png
+modal run modal_app.py::a0 --mode edit --image inputs/qwen_bear.png
 ```
 
 Other GPUs: `--gpu H100`, `--gpu A100-80GB`, `--gpu L40S`. Don't pool results across GPU types.
@@ -54,8 +54,7 @@ Gated or rate-limited downloads: create a Modal secret `huggingface` with `HF_TO
 | Run | GPU | Mode | Wall s (mean ± sd) | Largest stage | Peak device MiB | Notes |
 |---|---|---|---|---|---|---|
 | `20261008T100913Z_a0_t2i_h200_eager_time` | H200 | T2I, eager | 7.387 ± 0.014 (published 7.34) | `diffuse` 7.180 s (97.2%) | 39 925 (engine 39 030) | 4/4 outputs bit-identical |
-| `20261008T103632Z_a0_edit_h200_eager_time` | H200 | Edit, 1 ref, eager | 8.464 ± 0.032 | `diffuse` 8.112 s (95.8%) | 41 123 | 4/4 outputs bit-identical |
-
+| `20261008T125447Z_a0_edit_h200_eager_time_bear` | H200 | Edit, 1 ref (`qwen_bear.png`), eager | 8.363 ± 0.001 | `diffuse` 7.999 s (95.6%) | 41 121 | 4/4 outputs bit-identical |
 | `20261008T104032Z_a0_serving_t2i_h200_eager` | H200 | T2I serving, eager | client 7.453 (engine 7.342) | `diffuse`; response encoding ≈0.105 s | 39 799 | pixel-identical to offline |
 
-Full write-up: [A0_REPORT.md](A0_REPORT.md). Remaining work: [HANDOFF.md](HANDOFF.md).
+Full write-up: [A0_REPORT.md](A0_REPORT.md). Traces and memory snapshots: release [`a0-h200-20261008`](https://github.com/luca-888/qwen-image-21-bench/releases/tag/a0-h200-20261008).

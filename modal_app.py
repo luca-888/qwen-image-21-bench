@@ -4,7 +4,7 @@ Usage:
     modal run modal_app.py::download                      # prefetch weights (CPU only)
     modal run modal_app.py::a0 --mode t2i                 # timing run, H200
     modal run modal_app.py::a0 --mode t2i --trace         # separate torch-profiler run
-    modal run modal_app.py::a0 --mode edit --image results/<run>/images/measured_0.png
+    modal run modal_app.py::a0 --mode edit --image inputs/qwen_bear.png
     modal volume get qwen21-results <run_id> results/      # pull results locally
 """
 
@@ -51,6 +51,7 @@ image = (
     )
     .env({"HF_HOME": HF_CACHE, "HF_HUB_ENABLE_HF_TRANSFER": "0"})
     .add_local_dir(Path(__file__).parent / "bench", "/root/bench")
+    .add_local_dir(Path(__file__).parent / "inputs", "/root/inputs")
 )
 
 app = modal.App("qwen-image-21-bench", image=image)
@@ -146,7 +147,8 @@ def pipeline(gpu: str = "H200", with_edit: bool = True) -> dict:
     log["t2i_trace"] = t2i_trace
 
     if with_edit:
-        ref = f"{RESULTS}/{t2i}/images/measured_0.png"
+        # Reference image from the recipe's editing example (inputs/qwen_bear.png).
+        ref = "/root/inputs/qwen_bear.png"
         edit = f"{_stamp()}_a0_edit_{tag}_eager_time"
         _bench(gpu, ["--mode", "edit", "--image", ref, *base], edit)
         log["edit_time"] = edit
@@ -190,17 +192,21 @@ def a0(
     warmup: int = 1,
     feasibility: int = 1,
     measured: int = 2,
+    prompt: str = "",
+    tag: str = "",
 ):
     run_id = "_".join([
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
         "a0", mode, gpu.replace(":", "x").lower(),
         "eager" if eager else "default",
         "trace" if trace else "time",
-    ])
+    ] + ([tag] if tag else []))
     args = ["--mode", mode, "--warmup", str(warmup),
             "--feasibility", str(feasibility), "--measured", str(measured)]
     if eager:
         args.append("--enforce-eager")
+    if prompt:
+        args += ["--prompt", prompt]
     if trace:
         args.append("--trace")
     if mode == "edit":
@@ -212,5 +218,5 @@ def a0(
             batch.put_file(str(ref), f"/{run_id}/inputs/{ref.name}")
         args += ["--image", f"{RESULTS}/{run_id}/inputs/{ref.name}"]
 
-    out = run_bench.with_options(gpu=gpu).remote(args, run_id)
+    out = _bench(gpu, args, run_id)
     print(f"done: {out}\nfetch with: modal volume get qwen21-results {run_id} results/")

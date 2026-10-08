@@ -1,6 +1,6 @@
 {
-  "engine_init_s": 21.225094760000047,
-  "engine_init_device_used_peak_mib": 33905,
+  "engine_init_s": 28.452398178999992,
+  "engine_init_device_used_peak_mib": 33899,
   "wall_s": null,
   "device_used_peak_mib": null,
   "stages_s": {},
