@@ -16,7 +16,8 @@ Contribution to [vllm-project/vllm-omni#8586](https://github.com/vllm-project/vl
 
 ### Stages
 
-`--enable-diffusion-pipeline-profiler` times `tokenizer.forward`, `text_encoder.forward`, `vae.encode`, `diffuse`, and `vae.decode`.
+`--enable-diffusion-pipeline-profiler` times `text_encoder.forward`, `vae.encode`, `diffuse`, and `vae.decode`.
+A separate `--stages` run times every step of a request, including pre- and post-processing.
 The torch trace splits `diffuse` into prefix prefill and per-step decode.
 Response encoding is measured on the serving path (`bench/a0_serving.py`).
 
@@ -27,7 +28,9 @@ modal_app.py           Modal image (pinned SHA), volumes, entrypoints
 bench/a0_offline.py    runs inside the container; one engine, warmup → feasibility → measured
 bench/a0_serving.py    runs inside the container; `vllm serve`, sequential requests, shared serving benchmark
 bench/analyze_trace.py offline analysis of a torch-profiler trace → trace_analysis.json
+bench/analyze_memory_snapshot.py  offline analysis of a CUDA memory snapshot → memory_snapshot_analysis.json
 bench/plot_trace.py    draws figures/*.svg from two trace_analysis.json files
+bench/stagehook/       import hook used only by --stages (extends the pipeline profiler's targets)
 inputs/                reference image for editing (the recipe's qwen_bear.png)
 figures/               figures used in A0_REPORT.md
 results/<run_id>/      pulled from the Modal volume: env.json, runs.jsonl, summary.json, images/, trace/
@@ -42,6 +45,8 @@ pip install modal && modal setup
 modal run modal_app.py::download                 # cache weights in the Volume once
 modal run modal_app.py::a0 --mode t2i            # timing
 modal run modal_app.py::a0 --mode t2i --trace    # torch-profiler trace (diagnostic only)
+modal run modal_app.py::a0 --mode t2i --mem --feasibility 0     # reserved and allocated peak per request (diagnostic only)
+modal run modal_app.py::a0 --mode t2i --stages --feasibility 0  # every step of a request timed (diagnostic only)
 modal volume get qwen21-results <run_id> results/
 ```
 

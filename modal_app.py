@@ -4,6 +4,8 @@ Usage:
     modal run modal_app.py::download                      # prefetch weights (CPU only)
     modal run modal_app.py::a0 --mode t2i                 # timing run, H200
     modal run modal_app.py::a0 --mode t2i --trace         # separate torch-profiler run
+    modal run modal_app.py::a0 --mode t2i --mem           # separate run: reserved/allocated peaks per request
+    modal run modal_app.py::a0 --mode t2i --stages        # separate run: every step of a request timed
     modal run modal_app.py::a0 --mode edit --image inputs/qwen_bear.png
     modal volume get qwen21-results <run_id> results/      # pull results locally
 """
@@ -12,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -80,11 +83,57 @@ def run_bench(args: list[str], run_id: str, script: str = "a0_offline.py") -> st
     ]
     print("+", " ".join(cmd), flush=True)
     try:
-        subprocess.run(cmd, check=True)
+        if "--mem" in args or "--stages" in args:
+            _run_logged(cmd, out_dir, args)
+        else:
+            subprocess.run(cmd, check=True)
     finally:
         # Keep partial results (failures/OOMs must stay visible).
         results_volume.commit()
     return out_dir
+
+
+# diffusion_model_runner._sample_peak_memory_mb logs this at DEBUG; its "GB" is bytes / 1024**3.
+PEAK_LINE = re.compile(r"Peak GPU memory \(this request\): ([\d.]+) GB reserved, ([\d.]+) GB allocated")
+STAGE_LINE = re.compile(r"\[DiffusionPipelineProfiler\] QwenImage21Pipeline\.(\S+) took ([\d.]+)s")
+
+
+def _run_logged(cmd: list[str], out_dir: str, args: list[str]) -> None:
+    """Runs a diagnostic bench, keeps the engine log, and extracts per-request lines from it."""
+    os.makedirs(out_dir, exist_ok=True)
+    env = dict(os.environ)
+    if "--stages" in args:
+        env["QWEN21_BENCH_STAGES"] = "1"
+        env["PYTHONPATH"] = "/root/bench/stagehook" + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    peaks: list[dict] = []
+    requests: list[dict] = [{}]  # stage name -> seconds; `forward` is logged last inside a request
+    hooked = False
+    with open(f"{out_dir}/engine.log", "w") as log:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
+        for line in proc.stdout:
+            log.write(line)
+            print(line, end="", flush=True)
+            hooked = hooked or "[stagehook] patched" in line
+            if m := PEAK_LINE.search(line):
+                peaks.append({"reserved_gib": float(m.group(1)), "allocated_gib": float(m.group(2))})
+            if m := STAGE_LINE.search(line):
+                name, seconds = m.group(1), float(m.group(2))
+                # post_process runs after `forward` returned, so it belongs to the request just closed
+                row = requests[-2] if name == "post_process" and len(requests) > 1 else requests[-1]
+                row[name] = row.get(name, 0.0) + seconds
+                if name == "forward":
+                    requests.append({})
+        rc = proc.wait()
+    if "--mem" in args:
+        Path(f"{out_dir}/engine_peak_memory.json").write_text(json.dumps(peaks, indent=2))
+    if "--stages" in args:
+        Path(f"{out_dir}/stage_log.json").write_text(json.dumps([r for r in requests if r], indent=2))
+    if rc:
+        raise subprocess.CalledProcessError(rc, cmd)
+    if "--mem" in args and not peaks:
+        raise RuntimeError("no 'Peak GPU memory' lines in the engine log; DEBUG logging did not take effect")
+    if "--stages" in args and not hooked:
+        raise RuntimeError("the stage hook never patched the pipeline module")
 
 
 @app.function(timeout=900, cpu=2)
@@ -98,6 +147,15 @@ def precheck() -> None:
         "print('imports ok')",
     ], check=True)
     subprocess.run(["python3", "/root/bench/a0_offline.py", "--help"], check=True, capture_output=True)
+    # --stages relies on bench/stagehook patching the pipeline module at import.
+    subprocess.run([
+        "python3", "-c",
+        "import sitecustomize as s, vllm_omni.diffusion.models.qwen_image_21.pipeline_qwen_image_21 as m;"
+        "assert m.QwenImage21Pipeline._PROFILER_TARGETS == s.STAGE_TARGETS, m.QwenImage21Pipeline._PROFILER_TARGETS;"
+        "assert m.get_qwen_image_21_post_process_func.__wrapped__ and m.get_qwen_image_21_pre_process_func.__wrapped__;"
+        "missing = [t for t in s.STAGE_TARGETS if '.' not in t and not hasattr(m.QwenImage21Pipeline, t)];"
+        "assert not missing, missing",
+    ], check=True, env={**os.environ, "QWEN21_BENCH_STAGES": "1", "PYTHONPATH": "/root/bench/stagehook"})
 
 
 PUBLISHED_EAGER_S = 7.34  # recipe: H200 BF16 eager steady-state
@@ -187,6 +245,8 @@ def a0(
     mode: str = "t2i",
     gpu: str = "H200",
     trace: bool = False,
+    mem: bool = False,
+    stages: bool = False,
     eager: bool = True,
     image: str = "",
     warmup: int = 1,
@@ -199,7 +259,7 @@ def a0(
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
         "a0", mode, gpu.replace(":", "x").lower(),
         "eager" if eager else "default",
-        "trace" if trace else "time",
+        "trace" if trace else "mem" if mem else "stages" if stages else "time",
     ] + ([tag] if tag else []))
     args = ["--mode", mode, "--warmup", str(warmup),
             "--feasibility", str(feasibility), "--measured", str(measured)]
@@ -209,6 +269,10 @@ def a0(
         args += ["--prompt", prompt]
     if trace:
         args.append("--trace")
+    if mem:
+        args.append("--mem")
+    if stages:
+        args.append("--stages")
     if mode == "edit":
         if not image:
             raise SystemExit("--image is required for --mode edit")
@@ -218,5 +282,7 @@ def a0(
             batch.put_file(str(ref), f"/{run_id}/inputs/{ref.name}")
         args += ["--image", f"{RESULTS}/{run_id}/inputs/{ref.name}"]
 
+    if mem or stages:
+        precheck.remote()  # fail on CPU if the stage hook would not take effect
     out = _bench(gpu, args, run_id)
     print(f"done: {out}\nfetch with: modal volume get qwen21-results {run_id} results/")

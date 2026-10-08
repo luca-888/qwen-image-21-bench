@@ -1,0 +1,31 @@
+{
+ "events": 100000,
+ "window_s": 3.274064,
+ "window_first_phase": "diffuse",
+ "allocated_gib": {
+  "window_start": 32.31642718426883,
+  "window_min": 30.294726848602295,
+  "peak": 36.86485804338008,
+  "end": 30.294726848602295,
+  "peak_minus_end": 6.570131194777787
+ },
+ "reserved_end_gib": 39.283203125,
+ "peak": {
+  "phase": "vae.decode",
+  "s_into_window": 3.203485,
+  "alloc_size_gib": 0.5639474568888545,
+  "innermost_frames": [
+   "_conv_forward (conv.py:560)",
+   "forward (conv.py:565)",
+   "forward (autoencoder_kl_qwenimage21.py:204)",
+   "_call_impl (module.py:1789)",
+   "_wrapped_call_impl (module.py:1778)",
+   "forward (autoencoder_kl_qwenimage21.py:411)"
+  ]
+ },
+ "max_allocated_gib_by_phase": {
+  "vae.decode": 36.86485804338008,
+  "diffuse": 32.884947028942406,
+  "post_process": 30.310351848602295
+ }
+}

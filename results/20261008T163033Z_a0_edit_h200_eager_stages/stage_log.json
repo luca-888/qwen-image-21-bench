@@ -1,0 +1,47 @@
+[
+  {
+    "pre_process": 0.076979,
+    "text_encoder.forward": 1.350518,
+    "encode_prompt": 1.418499,
+    "vae.encode": 0.135163,
+    "_encode_vae_image": 0.135735,
+    "prepare_latents": 0.149939,
+    "prepare_timesteps": 0.000512,
+    "_prepare_generation_context": 1.577638,
+    "diffuse": 7.989716,
+    "vae.decode": 0.131605,
+    "_decode_latents": 0.133182,
+    "forward": 9.701132,
+    "post_process": 0.039495
+  },
+  {
+    "pre_process": 0.076608,
+    "text_encoder.forward": 0.081321,
+    "encode_prompt": 0.137311,
+    "vae.encode": 0.032667,
+    "_encode_vae_image": 0.033148,
+    "prepare_latents": 0.038242,
+    "prepare_timesteps": 0.000355,
+    "_prepare_generation_context": 0.178468,
+    "diffuse": 8.025788,
+    "vae.decode": 0.111414,
+    "_decode_latents": 0.113034,
+    "forward": 8.317764,
+    "post_process": 0.034511
+  },
+  {
+    "pre_process": 0.057718,
+    "text_encoder.forward": 0.082515,
+    "encode_prompt": 0.130372,
+    "vae.encode": 0.032614,
+    "_encode_vae_image": 0.033074,
+    "prepare_latents": 0.039924,
+    "prepare_timesteps": 0.000342,
+    "_prepare_generation_context": 0.174278,
+    "diffuse": 8.036881,
+    "vae.decode": 0.111731,
+    "_decode_latents": 0.113384,
+    "forward": 8.324956,
+    "post_process": 0.029638
+  }
+]

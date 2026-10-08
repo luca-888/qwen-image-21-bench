@@ -1,0 +1,514 @@
+[stagehook] patched vllm_omni.diffusion.models.qwen_image_21.pipeline_qwen_image_21 in pid 4
+
+Fetching 22 files:   0%|          | 0/22 [00:00<?, ?it/s]
+Fetching 22 files: 100%|██████████| 22/22 [00:00<00:00, 1182.36it/s]
+/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]
+Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 858.52it/s]
+
+Loading weights:   0%|          | 0/750 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/750 [00:00<06:09,  2.02it/s]
+Loading weights:   0%|          | 2/750 [00:01<06:43,  1.85it/s]
+Loading weights:   1%|          | 6/750 [00:01<01:48,  6.84it/s]
+Loading weights:   2%|▏         | 16/750 [00:01<00:34, 21.57it/s]
+Loading weights:   3%|▎         | 25/750 [00:01<00:21, 33.50it/s]
+Loading weights:   4%|▍         | 32/750 [00:01<00:19, 37.02it/s]
+Loading weights:   5%|▌         | 40/750 [00:01<00:15, 45.38it/s]
+Loading weights:   7%|▋         | 49/750 [00:01<00:13, 53.90it/s]
+Loading weights:   7%|▋         | 56/750 [00:01<00:12, 57.72it/s]
+Loading weights:   9%|▊         | 64/750 [00:01<00:11, 62.31it/s]
+Loading weights:  10%|▉         | 72/750 [00:02<00:11, 59.69it/s]
+Loading weights:  11%|█         | 82/750 [00:02<00:09, 66.93it/s]
+Loading weights:  12%|█▏        | 91/750 [00:02<00:09, 70.55it/s]
+Loading weights:  13%|█▎        | 99/750 [00:02<00:09, 67.84it/s]
+Loading weights:  14%|█▍        | 107/750 [00:02<00:09, 66.74it/s]
+Loading weights:  15%|█▌        | 115/750 [00:02<00:09, 69.99it/s]
+Loading weights:  16%|█▋        | 123/750 [00:02<00:08, 72.17it/s]
+Loading weights:  17%|█▋        | 131/750 [00:02<00:09, 65.88it/s]
+Loading weights:  18%|█▊        | 138/750 [00:03<00:09, 63.19it/s]
+Loading weights:  20%|█▉        | 148/750 [00:03<00:09, 63.73it/s]
+Loading weights:  21%|██        | 159/750 [00:03<00:08, 71.74it/s]
+Loading weights:  23%|██▎       | 169/750 [00:03<00:08, 65.23it/s]
+Loading weights:  24%|██▍       | 179/750 [00:03<00:09, 61.58it/s]
+Loading weights:  26%|██▌       | 192/750 [00:03<00:07, 72.80it/s]
+Loading weights:  27%|██▋       | 201/750 [00:03<00:07, 75.52it/s]
+Loading weights:  28%|██▊       | 209/750 [00:04<00:07, 73.96it/s]
+Loading weights:  29%|██▉       | 217/750 [00:04<00:07, 70.33it/s]
+Loading weights:  30%|███       | 226/750 [00:04<00:07, 70.24it/s]
+Loading weights:  32%|███▏      | 237/750 [00:04<00:07, 69.98it/s]
+Loading weights:  33%|███▎      | 247/750 [00:04<00:06, 76.12it/s]
+Loading weights:  34%|███▍      | 255/750 [00:04<00:06, 71.51it/s]
+Loading weights:  35%|███▌      | 266/750 [00:04<00:06, 79.58it/s]
+Loading weights:  37%|███▋      | 275/750 [00:04<00:06, 70.46it/s]
+Loading weights:  38%|███▊      | 283/750 [00:05<00:06, 69.17it/s]
+Loading weights:  39%|███▉      | 291/750 [00:05<00:06, 66.64it/s]
+Loading weights:  40%|███▉      | 299/750 [00:05<00:07, 63.90it/s]
+Loading weights:  41%|████▏     | 310/750 [00:05<00:05, 73.62it/s]
+Loading weights:  42%|████▏     | 318/750 [00:05<00:06, 66.85it/s]
+Loading weights:  43%|████▎     | 325/750 [00:05<00:06, 61.57it/s]
+Loading weights:  45%|████▍     | 335/750 [00:05<00:06, 67.07it/s]
+Loading weights:  46%|████▌     | 344/750 [00:06<00:05, 72.22it/s]
+Loading weights:  47%|████▋     | 352/750 [00:06<00:06, 61.52it/s]
+Loading weights:  49%|████▊     | 364/750 [00:06<00:05, 71.51it/s]
+Loading weights:  50%|████▉     | 372/750 [00:06<00:05, 72.61it/s]
+Loading weights:  51%|█████     | 380/750 [00:06<00:05, 66.22it/s]
+Loading weights:  52%|█████▏    | 387/750 [00:06<00:05, 66.90it/s]
+Loading weights:  55%|█████▌    | 416/750 [00:06<00:02, 120.64it/s]
+Loading weights:  61%|██████    | 455/750 [00:06<00:01, 187.62it/s]
+Loading weights:  70%|███████   | 527/750 [00:06<00:00, 327.87it/s]
+Loading weights:  79%|███████▉  | 595/750 [00:07<00:00, 423.86it/s]
+Loading weights:  91%|█████████ | 681/750 [00:07<00:00, 544.60it/s]
+Loading weights:  98%|█████████▊| 738/750 [00:07<00:00, 469.09it/s]
+Loading weights: 100%|██████████| 750/750 [00:07<00:00, 101.34it/s]
+
+Multi-thread loading shards:   0% Completed | 0/2 [00:00<?, ?it/s]
+
+Multi-thread loading shards:  50% Completed | 1/2 [00:03<00:03,  3.60s/it]
+
+Multi-thread loading shards: 100% Completed | 2/2 [00:07<00:00,  3.48s/it]
+
+Multi-thread loading shards: 100% Completed | 2/2 [00:07<00:00,  3.50s/it]
+
+[DiffusionPipelineProfiler] QwenImage21Pipeline.pre_process took 0.000006s
+
+  0%|          | 0/2 [00:00<?, ?it/s]
+ 50%|█████     | 1/2 [00:00<00:00,  3.15it/s]
+100%|██████████| 2/2 [00:00<00:00,  5.61it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s][DiffusionPipelineProfiler] QwenImage21Pipeline.pre_process took 0.000009s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.text_encoder.forward took 0.104881s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.encode_prompt took 0.108704s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_latents took 0.000215s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_timesteps took 0.000437s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._prepare_generation_context took 0.109994s
+
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+
+  2%|▏         | 1/50 [00:00<00:06,  7.08it/s][A
+
+  4%|▍         | 2/50 [00:00<00:06,  7.16it/s][A
+
+  8%|▊         | 4/50 [00:00<00:05,  8.71it/s][A
+
+ 10%|█         | 5/50 [00:00<00:05,  8.18it/s][A
+
+ 12%|█▏        | 6/50 [00:00<00:05,  7.88it/s][A
+
+ 14%|█▍        | 7/50 [00:00<00:05,  7.64it/s][A
+
+ 16%|█▌        | 8/50 [00:01<00:05,  7.29it/s][A
+
+ 18%|█▊        | 9/50 [00:01<00:05,  7.19it/s][A
+
+ 20%|██        | 10/50 [00:01<00:05,  7.15it/s][A
+
+ 22%|██▏       | 11/50 [00:01<00:05,  7.14it/s][A
+
+ 24%|██▍       | 12/50 [00:01<00:05,  7.13it/s][A
+
+ 26%|██▌       | 13/50 [00:01<00:05,  7.12it/s][A
+
+ 28%|██▊       | 14/50 [00:01<00:05,  7.09it/s][A
+
+ 30%|███       | 15/50 [00:02<00:04,  7.02it/s][A
+
+ 32%|███▏      | 16/50 [00:02<00:04,  7.03it/s][A
+
+ 34%|███▍      | 17/50 [00:02<00:04,  7.03it/s][A
+
+ 36%|███▌      | 18/50 [00:02<00:04,  7.06it/s][A
+
+ 38%|███▊      | 19/50 [00:02<00:04,  7.08it/s][A
+
+ 40%|████      | 20/50 [00:02<00:04,  7.09it/s][A
+
+ 42%|████▏     | 21/50 [00:02<00:04,  7.07it/s][A
+
+ 44%|████▍     | 22/50 [00:03<00:03,  7.01it/s][A
+
+ 46%|████▌     | 23/50 [00:03<00:03,  7.00it/s][A
+
+ 48%|████▊     | 24/50 [00:03<00:03,  7.01it/s][A
+
+ 50%|█████     | 25/50 [00:03<00:03,  7.04it/s][A
+
+ 52%|█████▏    | 26/50 [00:03<00:03,  7.06it/s][A
+
+ 54%|█████▍    | 27/50 [00:03<00:03,  7.07it/s][A
+
+ 56%|█████▌    | 28/50 [00:03<00:03,  7.07it/s][A
+
+ 58%|█████▊    | 29/50 [00:04<00:02,  7.04it/s][A
+
+ 60%|██████    | 30/50 [00:04<00:02,  7.03it/s][A
+
+ 62%|██████▏   | 31/50 [00:04<00:02,  7.03it/s][A
+
+ 64%|██████▍   | 32/50 [00:04<00:02,  7.01it/s][A
+
+ 66%|██████▌   | 33/50 [00:04<00:02,  7.03it/s][A
+
+ 68%|██████▊   | 34/50 [00:04<00:02,  7.06it/s][A
+
+ 70%|███████   | 35/50 [00:04<00:02,  7.05it/s][A
+
+ 72%|███████▏  | 36/50 [00:05<00:01,  7.05it/s][A
+
+ 74%|███████▍  | 37/50 [00:05<00:01,  7.04it/s][A
+
+ 76%|███████▌  | 38/50 [00:05<00:01,  7.05it/s][A
+
+ 78%|███████▊  | 39/50 [00:05<00:01,  7.05it/s][A
+
+ 80%|████████  | 40/50 [00:05<00:01,  7.04it/s][A
+
+ 82%|████████▏ | 41/50 [00:05<00:01,  7.02it/s][A
+
+ 84%|████████▍ | 42/50 [00:05<00:01,  7.02it/s][A
+
+ 86%|████████▌ | 43/50 [00:06<00:00,  7.03it/s][A
+
+ 88%|████████▊ | 44/50 [00:06<00:00,  7.02it/s][A
+
+ 90%|█████████ | 45/50 [00:06<00:00,  7.01it/s][A
+
+ 92%|█████████▏| 46/50 [00:06<00:00,  7.03it/s][A
+
+ 94%|█████████▍| 47/50 [00:06<00:00,  7.04it/s][A
+
+ 96%|█████████▌| 48/50 [00:06<00:00,  7.03it/s][A
+
+ 98%|█████████▊| 49/50 [00:06<00:00,  7.05it/s][A
+
+100%|██████████| 50/50 [00:07<00:00,  7.01it/s][A
+100%|██████████| 50/50 [00:07<00:00,  7.13it/s]
+[DiffusionPipelineProfiler] QwenImage21Pipeline.diffuse took 7.100346s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.vae.decode took 0.157997s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._decode_latents took 0.159768s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.forward took 7.370564s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.post_process took 0.063364s
+
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.44s/it]
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.44s/it]
+{"phase": "warmup", "index": 0, "wall_s": 7.440837050000013, "device_used_peak_mib": 39799, "stage_durations_s": {"QwenImage21Pipeline.text_encoder.forward": 0.10488064799999108, "QwenImage21Pipeline.encode_prompt": 0.10870375899999374, "QwenImage21Pipeline.prepare_latents": 0.00021489499999916006, "QwenImage21Pipeline.prepare_timesteps": 0.0004365700000050765, "QwenImage21Pipeline._prepare_generation_context": 0.10999432999999215, "QwenImage21Pipeline.diffuse": 7.1003458379999955, "QwenImage21Pipeline.vae.decode": 0.1579972839999897, "queue_wait_ms": 0.7542649999976447, "stage_0_gen_ms": 7437.978744506836}, "engine_peak_memory_mb": 39030.0, "torch_max_memory_allocated_gib": 36.84854555130005, "torch_max_memory_reserved_gib": 38.115234375, "error": null, "image_sha256": "b78bc930384bad7e0f85c29b6db823cc21d080204f8487a3c6cf164a3e06b96b"}
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s][DiffusionPipelineProfiler] QwenImage21Pipeline.pre_process took 0.000005s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.text_encoder.forward took 0.043877s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.encode_prompt took 0.047606s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_latents took 0.000174s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_timesteps took 0.000422s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._prepare_generation_context took 0.048874s
+
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+
+  4%|▍         | 2/50 [00:00<00:04, 10.28it/s][A
+
+  8%|▊         | 4/50 [00:00<00:05,  8.21it/s][A
+
+ 10%|█         | 5/50 [00:00<00:05,  7.88it/s][A
+
+ 12%|█▏        | 6/50 [00:00<00:05,  7.66it/s][A
+
+ 14%|█▍        | 7/50 [00:00<00:05,  7.43it/s][A
+
+ 16%|█▌        | 8/50 [00:01<00:05,  7.16it/s][A
+
+ 18%|█▊        | 9/50 [00:01<00:05,  7.12it/s][A
+
+ 20%|██        | 10/50 [00:01<00:05,  7.12it/s][A
+
+ 22%|██▏       | 11/50 [00:01<00:05,  7.11it/s][A
+
+ 24%|██▍       | 12/50 [00:01<00:05,  7.10it/s][A
+
+ 26%|██▌       | 13/50 [00:01<00:05,  7.14it/s][A
+
+ 28%|██▊       | 14/50 [00:01<00:05,  7.13it/s][A
+
+ 30%|███       | 15/50 [00:02<00:04,  7.05it/s][A
+
+ 32%|███▏      | 16/50 [00:02<00:04,  7.02it/s][A
+
+ 34%|███▍      | 17/50 [00:02<00:04,  7.03it/s][A
+
+ 36%|███▌      | 18/50 [00:02<00:04,  7.04it/s][A
+
+ 38%|███▊      | 19/50 [00:02<00:04,  7.06it/s][A
+
+ 40%|████      | 20/50 [00:02<00:04,  7.05it/s][A
+
+ 42%|████▏     | 21/50 [00:02<00:04,  7.02it/s][A
+
+ 44%|████▍     | 22/50 [00:03<00:03,  7.01it/s][A
+
+ 46%|████▌     | 23/50 [00:03<00:03,  7.00it/s][A
+
+ 48%|████▊     | 24/50 [00:03<00:03,  7.00it/s][A
+
+ 50%|█████     | 25/50 [00:03<00:03,  7.01it/s][A
+
+ 52%|█████▏    | 26/50 [00:03<00:03,  7.03it/s][A
+
+ 54%|█████▍    | 27/50 [00:03<00:03,  7.02it/s][A
+
+ 56%|█████▌    | 28/50 [00:03<00:03,  6.99it/s][A
+
+ 58%|█████▊    | 29/50 [00:04<00:03,  6.99it/s][A
+
+ 60%|██████    | 30/50 [00:04<00:02,  6.99it/s][A
+
+ 62%|██████▏   | 31/50 [00:04<00:02,  7.01it/s][A
+
+ 64%|██████▍   | 32/50 [00:04<00:02,  7.01it/s][A
+
+ 66%|██████▌   | 33/50 [00:04<00:02,  7.02it/s][A
+
+ 68%|██████▊   | 34/50 [00:04<00:02,  7.03it/s][A
+
+ 70%|███████   | 35/50 [00:04<00:02,  7.01it/s][A
+
+ 72%|███████▏  | 36/50 [00:05<00:01,  7.01it/s][A
+
+ 74%|███████▍  | 37/50 [00:05<00:01,  7.00it/s][A
+
+ 76%|███████▌  | 38/50 [00:05<00:01,  7.01it/s][A
+
+ 78%|███████▊  | 39/50 [00:05<00:01,  7.00it/s][A
+
+ 80%|████████  | 40/50 [00:05<00:01,  7.02it/s][A
+
+ 82%|████████▏ | 41/50 [00:05<00:01,  7.04it/s][A
+
+ 84%|████████▍ | 42/50 [00:05<00:01,  7.02it/s][A
+
+ 86%|████████▌ | 43/50 [00:06<00:00,  7.02it/s][A
+
+ 88%|████████▊ | 44/50 [00:06<00:00,  6.99it/s][A
+
+ 90%|█████████ | 45/50 [00:06<00:00,  7.02it/s][A
+
+ 92%|█████████▏| 46/50 [00:06<00:00,  7.03it/s][A
+
+ 94%|█████████▍| 47/50 [00:06<00:00,  7.02it/s][A
+
+ 96%|█████████▌| 48/50 [00:06<00:00,  7.02it/s][A
+
+ 98%|█████████▊| 49/50 [00:06<00:00,  6.99it/s][A
+
+100%|██████████| 50/50 [00:07<00:00,  6.98it/s][A
+100%|██████████| 50/50 [00:07<00:00,  7.11it/s]
+[DiffusionPipelineProfiler] QwenImage21Pipeline.diffuse took 7.111739s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.vae.decode took 0.112502s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._decode_latents took 0.114079s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.forward took 7.275220s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.post_process took 0.062313s
+
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.34s/it]
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.34s/it]
+{"phase": "measured", "index": 0, "wall_s": 7.343053380000001, "device_used_peak_mib": 39799, "stage_durations_s": {"QwenImage21Pipeline.text_encoder.forward": 0.04387654800000007, "QwenImage21Pipeline.encode_prompt": 0.04760561199999813, "QwenImage21Pipeline.prepare_latents": 0.00017357599999456852, "QwenImage21Pipeline.prepare_timesteps": 0.0004217150000016545, "QwenImage21Pipeline._prepare_generation_context": 0.04887418100000218, "QwenImage21Pipeline.diffuse": 7.111738802999994, "QwenImage21Pipeline.vae.decode": 0.11250195399999541, "queue_wait_ms": 0.7644420000048058, "stage_0_gen_ms": 7340.464353561401}, "engine_peak_memory_mb": 39030.0, "torch_max_memory_allocated_gib": 36.85703945159912, "torch_max_memory_reserved_gib": 38.115234375, "error": null, "image_sha256": "b78bc930384bad7e0f85c29b6db823cc21d080204f8487a3c6cf164a3e06b96b"}
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s][DiffusionPipelineProfiler] QwenImage21Pipeline.pre_process took 0.000005s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.text_encoder.forward took 0.041225s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.encode_prompt took 0.045347s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_latents took 0.000125s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.prepare_timesteps took 0.000561s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._prepare_generation_context took 0.046545s
+
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+
+  4%|▍         | 2/50 [00:00<00:04, 10.30it/s][A
+
+  8%|▊         | 4/50 [00:00<00:05,  8.13it/s][A
+
+ 10%|█         | 5/50 [00:00<00:05,  7.82it/s][A
+
+ 12%|█▏        | 6/50 [00:00<00:05,  7.60it/s][A
+
+ 14%|█▍        | 7/50 [00:00<00:05,  7.44it/s][A
+
+ 16%|█▌        | 8/50 [00:01<00:05,  7.02it/s][A
+
+ 18%|█▊        | 9/50 [00:01<00:05,  7.04it/s][A
+
+ 20%|██        | 10/50 [00:01<00:05,  7.06it/s][A
+
+ 22%|██▏       | 11/50 [00:01<00:05,  7.07it/s][A
+
+ 24%|██▍       | 12/50 [00:01<00:05,  7.09it/s][A
+
+ 26%|██▌       | 13/50 [00:01<00:05,  7.09it/s][A
+
+ 28%|██▊       | 14/50 [00:01<00:05,  7.02it/s][A
+
+ 30%|███       | 15/50 [00:02<00:05,  6.90it/s][A
+
+ 32%|███▏      | 16/50 [00:02<00:04,  6.92it/s][A
+
+ 34%|███▍      | 17/50 [00:02<00:04,  6.94it/s][A
+
+ 36%|███▌      | 18/50 [00:02<00:04,  6.98it/s][A
+
+ 38%|███▊      | 19/50 [00:02<00:04,  7.02it/s][A
+
+ 40%|████      | 20/50 [00:02<00:04,  7.06it/s][A
+
+ 42%|████▏     | 21/50 [00:02<00:04,  7.02it/s][A
+
+ 44%|████▍     | 22/50 [00:03<00:04,  6.94it/s][A
+
+ 46%|████▌     | 23/50 [00:03<00:03,  6.94it/s][A
+
+ 48%|████▊     | 24/50 [00:03<00:03,  6.96it/s][A
+
+ 50%|█████     | 25/50 [00:03<00:03,  6.99it/s][A
+
+ 52%|█████▏    | 26/50 [00:03<00:03,  7.01it/s][A
+
+ 54%|█████▍    | 27/50 [00:03<00:03,  7.03it/s][A
+
+ 56%|█████▌    | 28/50 [00:03<00:03,  6.99it/s][A
+
+ 58%|█████▊    | 29/50 [00:04<00:03,  6.96it/s][A
+
+ 60%|██████    | 30/50 [00:04<00:02,  6.97it/s][A
+
+ 62%|██████▏   | 31/50 [00:04<00:02,  6.98it/s][A
+
+ 64%|██████▍   | 32/50 [00:04<00:02,  7.00it/s][A
+
+ 66%|██████▌   | 33/50 [00:04<00:02,  7.03it/s][A
+
+ 68%|██████▊   | 34/50 [00:04<00:02,  7.04it/s][A
+
+ 70%|███████   | 35/50 [00:04<00:02,  7.02it/s][A
+
+ 72%|███████▏  | 36/50 [00:05<00:02,  6.98it/s][A
+
+ 74%|███████▍  | 37/50 [00:05<00:01,  6.97it/s][A
+
+ 76%|███████▌  | 38/50 [00:05<00:01,  6.98it/s][A
+
+ 78%|███████▊  | 39/50 [00:05<00:01,  7.00it/s][A
+
+ 80%|████████  | 40/50 [00:05<00:01,  7.02it/s][A
+
+ 82%|████████▏ | 41/50 [00:05<00:01,  7.02it/s][A
+
+ 84%|████████▍ | 42/50 [00:05<00:01,  7.01it/s][A
+
+ 86%|████████▌ | 43/50 [00:06<00:01,  6.99it/s][A
+
+ 88%|████████▊ | 44/50 [00:06<00:00,  6.98it/s][A
+
+ 90%|█████████ | 45/50 [00:06<00:00,  6.97it/s][A
+
+ 92%|█████████▏| 46/50 [00:06<00:00,  7.01it/s][A
+
+ 94%|█████████▍| 47/50 [00:06<00:00,  7.03it/s][A
+
+ 96%|█████████▌| 48/50 [00:06<00:00,  7.03it/s][A
+
+ 98%|█████████▊| 49/50 [00:06<00:00,  7.01it/s][A
+
+100%|██████████| 50/50 [00:07<00:00,  6.99it/s][A
+100%|██████████| 50/50 [00:07<00:00,  7.08it/s]
+[DiffusionPipelineProfiler] QwenImage21Pipeline.diffuse took 7.144190s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.vae.decode took 0.112746s
+[DiffusionPipelineProfiler] QwenImage21Pipeline._decode_latents took 0.114292s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.forward took 7.305629s
+[DiffusionPipelineProfiler] QwenImage21Pipeline.post_process took 0.059891s
+
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.37s/it]
+Processed prompts: 100%|██████████| 1/1 [00:07<00:00,  7.37s/it]
+{"phase": "measured", "index": 1, "wall_s": 7.370639336000011, "device_used_peak_mib": 39799, "stage_durations_s": {"QwenImage21Pipeline.text_encoder.forward": 0.041224819000007074, "QwenImage21Pipeline.encode_prompt": 0.04534656300000961, "QwenImage21Pipeline.prepare_latents": 0.00012460300000327607, "QwenImage21Pipeline.prepare_timesteps": 0.0005606819999997015, "QwenImage21Pipeline._prepare_generation_context": 0.04654486799999802, "QwenImage21Pipeline.diffuse": 7.144190365, "QwenImage21Pipeline.vae.decode": 0.11274567099999899, "queue_wait_ms": 0.6179319999972677, "stage_0_gen_ms": 7368.271827697754}, "engine_peak_memory_mb": 39030.0, "torch_max_memory_allocated_gib": 36.85648155212402, "torch_max_memory_reserved_gib": 38.115234375, "error": null, "image_sha256": "b78bc930384bad7e0f85c29b6db823cc21d080204f8487a3c6cf164a3e06b96b"}
+{
+  "engine_init_s": 31.407305898000004,
+  "engine_init_device_used_peak_mib": 33779,
+  "wall_s": {
+    "n": 2,
+    "mean": 7.356846358000006,
+    "min": 7.343053380000001,
+    "max": 7.370639336000011,
+    "stdev": 0.01950621655312081
+  },
+  "device_used_peak_mib": {
+    "n": 2,
+    "mean": 39799.0,
+    "min": 39799,
+    "max": 39799,
+    "stdev": 0.0
+  },
+  "stages_s": {
+    "QwenImage21Pipeline._prepare_generation_context": {
+      "n": 2,
+      "mean": 0.0477095245000001,
+      "min": 0.04654486799999802,
+      "max": 0.04887418100000218,
+      "stdev": 0.0016470730178089242
+    },
+    "QwenImage21Pipeline.diffuse": {
+      "n": 2,
+      "mean": 7.127964583999997,
+      "min": 7.111738802999994,
+      "max": 7.144190365,
+      "stdev": 0.022946719550299678
+    },
+    "QwenImage21Pipeline.encode_prompt": {
+      "n": 2,
+      "mean": 0.04647608750000387,
+      "min": 0.04534656300000961,
+      "max": 0.04760561199999813,
+      "stdev": 0.0015973888669245729
+    },
+    "QwenImage21Pipeline.prepare_latents": {
+      "n": 2,
+      "mean": 0.0001490894999989223,
+      "min": 0.00012460300000327607,
+      "max": 0.00017357599999456852,
+      "stdev": 3.462914038889163e-05
+    },
+    "QwenImage21Pipeline.prepare_timesteps": {
+      "n": 2,
+      "mean": 0.000491198500000678,
+      "min": 0.0004217150000016545,
+      "max": 0.0005606819999997015,
+      "stdev": 9.826450805976995e-05
+    },
+    "QwenImage21Pipeline.text_encoder.forward": {
+      "n": 2,
+      "mean": 0.04255068350000357,
+      "min": 0.041224819000007074,
+      "max": 0.04387654800000007,
+      "stdev": 0.0018750555577640706
+    },
+    "QwenImage21Pipeline.vae.decode": {
+      "n": 2,
+      "mean": 0.1126238124999972,
+      "min": 0.11250195399999541,
+      "max": 0.11274567099999899,
+      "stdev": 0.00017233394339297668
+    },
+    "queue_wait_ms": {
+      "n": 2,
+      "mean": 0.6911870000010367,
+      "min": 0.6179319999972677,
+      "max": 0.7644420000048058,
+      "stdev": 0.10359821451697132
+    },
+    "stage_0_gen_ms": {
+      "n": 2,
+      "mean": 7354.368090629578,
+      "min": 7340.464353561401,
+      "max": 7368.271827697754,
+      "stdev": 19.662853529484416
+    }
+  },
+  "image_sha256_identical": true,
+  "failures": 0
+}

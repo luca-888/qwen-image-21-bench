@@ -15,6 +15,8 @@ import argparse
 import hashlib
 import io
 import json
+import logging
+import os
 import platform
 import statistics
 import subprocess
@@ -48,6 +50,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--measured", type=int, default=2)
     p.add_argument("--trace", action="store_true",
                    help="Diagnostic run: torch-profile one request after warmup. Not for timing.")
+    p.add_argument("--stages", action="store_true",
+                   help="Diagnostic run: time every step of a request (bench/stagehook patches the "
+                        "pipeline's profiler targets; modal_app parses the log into stage_log.json). "
+                        "A local modification of the pinned checkout, so not a timing baseline.")
+    p.add_argument("--mem", action="store_true",
+                   help="Diagnostic run: engine DEBUG logging, so each request logs its reserved and "
+                        "allocated peaks (parsed into engine_peak_memory.json by modal_app). Not for timing.")
     return p.parse_args()
 
 
@@ -85,12 +94,12 @@ def collect_env(args: argparse.Namespace) -> dict:
         "cpu": sh("lscpu | grep 'Model name'"),
         "workload": {k: getattr(args, k) for k in
                      ["mode", "prompt", "image", "height", "width", "steps", "seed",
-                      "true_cfg_scale", "enforce_eager", "warmup", "feasibility", "measured", "trace"]},
+                      "true_cfg_scale", "enforce_eager", "warmup", "feasibility", "measured", "trace", "mem", "stages"]},
     }
 
 
 class GpuMemSampler:
-    """Polls device-used memory via nvidia-smi (engine workers run in other processes)."""
+    """Polls device-used memory via nvidia-smi (whole device, including the CUDA context)."""
 
     def __init__(self, interval: float = 0.1):
         self.interval, self.peak_mib, self._stop = interval, 0, threading.Event()
@@ -116,6 +125,8 @@ class GpuMemSampler:
 
 def main() -> None:
     args = parse_args()
+    if args.mem:
+        os.environ["VLLM_LOGGING_LEVEL"] = "DEBUG"  # before vllm is imported; inherited by engine workers
     if args.prompt is None:
         args.prompt = TEAPOT if args.mode == "t2i" else EDIT_PROMPT
     out = Path(args.out)
@@ -151,6 +162,16 @@ def main() -> None:
     with GpuMemSampler() as init_mem:
         omni = Omni(**omni_kwargs)
     init_s = time.perf_counter() - t0
+    # vllm does not configure log output for the offline entrypoint, so surface the two loggers
+    # the diagnostic runs read: the runner's per-request peak line (DEBUG) and the profiler's
+    # per-stage lines (INFO), which include `forward` and `_decode_latents`.
+    surfaced = ([("vllm_omni.diffusion.worker.diffusion_model_runner", logging.DEBUG)] if args.mem else []) + \
+               ([("vllm_omni.diffusion.profiler.diffusion_pipeline_profiler", logging.INFO)] if args.stages else [])
+    for name, level in surfaced:
+        log = logging.getLogger(name)
+        log.setLevel(level)
+        if not log.hasHandlers():
+            log.addHandler(logging.StreamHandler())
 
     if args.mode == "t2i":
         prompt = {"prompt": args.prompt, "modalities": ["image"]}
@@ -191,6 +212,10 @@ def main() -> None:
             o = outputs[0]
             row["stage_durations_s"] = dict(getattr(o, "stage_durations", {}) or {})
             row["engine_peak_memory_mb"] = getattr(o, "peak_memory_mb", None)
+            # The runner resets torch's peak counters before each request; non-zero here only if
+            # the diffusion worker shares this process.
+            row["torch_max_memory_allocated_gib"] = torch.cuda.max_memory_allocated() / 1024**3
+            row["torch_max_memory_reserved_gib"] = torch.cuda.max_memory_reserved() / 1024**3
             row["error"] = getattr(o, "error", None)
             images = getattr(o, "images", None) or []
             if images:

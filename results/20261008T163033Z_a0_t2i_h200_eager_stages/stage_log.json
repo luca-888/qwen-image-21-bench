@@ -1,0 +1,41 @@
+[
+  {
+    "pre_process": 1.5e-05,
+    "text_encoder.forward": 0.104881,
+    "encode_prompt": 0.108704,
+    "prepare_latents": 0.000215,
+    "prepare_timesteps": 0.000437,
+    "_prepare_generation_context": 0.109994,
+    "diffuse": 7.100346,
+    "vae.decode": 0.157997,
+    "_decode_latents": 0.159768,
+    "forward": 7.370564,
+    "post_process": 0.063364
+  },
+  {
+    "pre_process": 5e-06,
+    "text_encoder.forward": 0.043877,
+    "encode_prompt": 0.047606,
+    "prepare_latents": 0.000174,
+    "prepare_timesteps": 0.000422,
+    "_prepare_generation_context": 0.048874,
+    "diffuse": 7.111739,
+    "vae.decode": 0.112502,
+    "_decode_latents": 0.114079,
+    "forward": 7.27522,
+    "post_process": 0.062313
+  },
+  {
+    "pre_process": 5e-06,
+    "text_encoder.forward": 0.041225,
+    "encode_prompt": 0.045347,
+    "prepare_latents": 0.000125,
+    "prepare_timesteps": 0.000561,
+    "_prepare_generation_context": 0.046545,
+    "diffuse": 7.14419,
+    "vae.decode": 0.112746,
+    "_decode_latents": 0.114292,
+    "forward": 7.305629,
+    "post_process": 0.059891
+  }
+]
