@@ -26,7 +26,7 @@ pip install modal && modal setup        # 授权时选 oscarelpalomino
 | | | `20261008T103632Z_a0_edit_h200_eager_time` | ✅ 完成 |
 | | | `20261008T103802Z_a0_edit_h200_eager_trace` | ⏳ 运行中。profiler 后处理估计要 20 分钟以上，期间 GPU 空闲但照样计费，属于正常现象 |
 | | | `pipeline_<时间>.json` | 整个流程结束后写入 |
-| [ap-atPKBkZUIkraA7fnx9OFDx](https://modal.com/apps/oscarelpalomino/main/ap-atPKBkZUIkraA7fnx9OFDx) | `serving`：起 server，统计 process-to-ready、客户端延迟、响应大小和解码耗时，再跑官方 benchmark（并发 1）交叉验证 | `20261008T104032Z_a0_serving_t2i_h200_eager` | ⏳ 运行中 |
+| [ap-atPKBkZUIkraA7fnx9OFDx](https://modal.com/apps/oscarelpalomino/main/ap-atPKBkZUIkraA7fnx9OFDx) | `serving`：起 server，统计 process-to-ready、客户端延迟、响应大小和解码耗时，再跑官方 benchmark（并发 1）交叉验证 | `20261008T104032Z_a0_serving_t2i_h200_eager` | ✅ 完成，0 失败，benchmark 返回码 0 |
 
 检查进度：
 
@@ -68,12 +68,26 @@ t2i 的 trace 分析结果（`bench/analyze_trace.py`；profiler 会让整体变
 - 短 prompt 的 t2i 里，prefix prefill 可以忽略：第 0 步和后面的步耗时一样。
 - edit 比 t2i 多 1.08 s，其中 0.93 s 在 `diffuse` 里，推测是参考图让 prefix 变长，每步 attention 的 KV 也跟着变长。**需要用 edit 的 trace 来验证**。
 
+serving 路径（t2i，eager，正式测量 n=2；`20261008T104032Z_a0_serving_t2i_h200_eager`）：
+
+| | 数值 |
+|---|---:|
+| process-to-ready（包括加载权重） | 72.1 s |
+| 客户端总延迟 | **7.453 s** |
+| 引擎 `stage_gen_time_ms` | 7.342 s（每步去噪 142.8 ms） |
+| **生成结束到响应发出（PNG 编码 + base64 + JSON，服务端）** | **约 0.105 s（1.4%）** |
+| 网络传输响应体（5.6 MB JSON，里面是 4.2 MB 的 PNG） | 0.006 s |
+| 客户端解析 JSON、解 base64、解 PNG | 0.009 s、0.012 s、0.020 s |
+| 显存峰值（nvidia-smi） | 39.8 GB |
+
+→ 响应编码约 0.1 s，和 VAE decode 是同一个量级，但跟去噪比可以忽略。serving 输出的 PNG 和离线结果的 SHA256 不一样，这是两边 PNG 编码方式不同造成的，**要解码成像素后再比较**，确认画面内容一致。
+
 ## 5. 剩下的工作（全部在 CPU 上）
 
 - [ ] 等两个 App 跑完，拉取全部结果。如果有失败，先看 `runs.jsonl` 和 `server.log` 里的报错。
 - [ ] 分析 edit 的 trace：`python3 bench/analyze_trace.py results/<edit_trace>/trace/*/trace_rank0.json.gz --json results/<edit_trace>/trace_analysis.json`。重点看第 0 步（prefill）和后续各步的差别，以及 attention 占比相比 t2i 的变化。
 - [ ] 查清显存差异（39.0 GB 对 36.9 GB）：用 https://pytorch.org/memory_viz 打开 `memory_snapshot_rank0.pickle`，看峰值时刻显存都被哪些张量占着（权重、prefix KV、激活、VAE），再和 recipe 的测量口径对比。也要考虑 torch cu130 和 cu129 的差异。
-- [ ] serving 结果：对比 process-to-ready 时间、客户端延迟和离线 `wall_s`，差值就是"响应编码 + 传输"的开销。再看 `benchmark_c1.json` 的结果是否一致。如果 `vllm serve --revision` 或者 `return_stage_metrics` 不被支持，`server.log` 和 `runs.jsonl` 里会有报错，按需要修改 `bench/a0_serving.py` 后单独重跑：`modal run --detach modal_app.py::serving`。
+- [ ] serving：初步结果见上面的表。还要检查 `benchmark_c1.json` 的结果是否一致，并把 serving 和离线的图片解码成像素后比较。
 - [ ] 把结果表填进 README 的 Results 部分。提交小文件（json 和图片）；trace（`.json.gz`）和 `.pickle` 已经在 `.gitignore` 里排除了，上传到 GitHub Release：
 
 ```bash
