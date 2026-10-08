@@ -1,0 +1,1 @@
+python3 /opt/vllm-omni/benchmarks/diffusion/diffusion_benchmark_serving.py --port 8091 --model Qwen/Qwen-Image-2.1 --dataset random --task t2i --num-prompts 3 --max-concurrency 1 --warmup-requests 1 --width 1024 --height 1024 --num-inference-steps 50 --seed 42 --return-stage-metrics --output-file /results/20261008T104032Z_a0_serving_t2i_h200_eager/benchmark_c1.json

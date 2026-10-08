@@ -1,0 +1,1 @@
+vllm serve Qwen/Qwen-Image-2.1 --omni --port 8091 --revision d26bb61231c349cf6b7896fa83353113880e1ba3 --enable-diffusion-pipeline-profiler --enforce-eager
