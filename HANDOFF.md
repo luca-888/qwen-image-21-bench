@@ -24,8 +24,8 @@ pip install modal && modal setup        # 授权时选 oscarelpalomino
 | [ap-UI0zjVnYBIVv877X9O2jPz](https://modal.com/apps/oscarelpalomino/main/ap-UI0zjVnYBIVv877X9O2jPz) | `all` 流程：t2i 计时 → t2i trace → edit 计时 → edit trace | `20261008T100913Z_a0_t2i_h200_eager_time` | ✅ 完成 |
 | | | `20261008T101117Z_a0_t2i_h200_eager_trace` | ✅ 完成（包含显存快照） |
 | | | `20261008T103632Z_a0_edit_h200_eager_time` | ✅ 完成 |
-| | | `20261008T103802Z_a0_edit_h200_eager_trace` | ⏳ 运行中。profiler 后处理估计要 20 分钟以上，期间 GPU 空闲但照样计费，属于正常现象 |
-| | | `pipeline_<时间>.json` | 整个流程结束后写入 |
+| | | `20261008T103802Z_a0_edit_h200_eager_trace` | ✅ 完成（19:04，含显存快照） |
+| | | `pipeline_<时间>.json` | ❌ 没有写入：所有运行结束后，本机日志连接断开导致总控函数被取消。测试数据完整，不受影响 |
 | [ap-atPKBkZUIkraA7fnx9OFDx](https://modal.com/apps/oscarelpalomino/main/ap-atPKBkZUIkraA7fnx9OFDx) | `serving`：起 server，统计 process-to-ready、客户端延迟、响应大小和解码耗时，再跑官方 benchmark（并发 1）交叉验证 | `20261008T104032Z_a0_serving_t2i_h200_eager` | ✅ 完成，0 失败，benchmark 返回码 0 |
 
 检查进度：
@@ -81,6 +81,8 @@ serving 路径（t2i，eager，正式测量 n=2；`20261008T104032Z_a0_serving_t
 | 显存峰值（nvidia-smi） | 39.8 GB |
 
 → 响应编码约 0.1 s，和 VAE decode 是同一个量级，但跟去噪比可以忽略。serving 输出的 PNG 和离线结果的 SHA256 不一样，这是两边 PNG 编码方式不同造成的，**要解码成像素后再比较**，确认画面内容一致。
+
+> 更新：edit trace 分析、显存分析和 serving 分析都已完成，见 [A0_REPORT.md](A0_REPORT.md)。剩下的只有 Release 上传和 issue 评论。
 
 ## 5. 剩下的工作（全部在 CPU 上）
 

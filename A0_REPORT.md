@@ -83,13 +83,13 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 
 ## 4. Memory
 
-| | T2I |
-|---|---:|
-| **Peak allocated** (memory snapshot) | **36.86 GiB**. Matches the published 36.9 GB |
-| Peak reserved (= engine `peak_memory_mb` 39,030 MiB) | 38.12 GiB |
-| Device used (nvidia-smi, includes CUDA context) | 39.9 GB (edit: 41.1 GB) |
-| Resident after request (weights, etc.) | 30.29 GiB |
-| **Peak location** | **VAE decode**: +6.56 GiB transient (`autoencoder_kl_qwenimage21.py` decoder blocks) |
+| | T2I | Edit |
+|---|---:|---:|
+| **Peak allocated** (memory snapshot) | **36.86 GiB**. Matches the published 36.9 GB | 36.86 GiB |
+| Peak reserved (= engine `peak_memory_mb`) | 38.12 GiB (39,030 MiB) | 39.28 GiB (40,226 MiB) |
+| Device used (nvidia-smi, includes CUDA context) | 39,925 MiB | 41,123 MiB |
+| Resident after request (weights, etc.) | 30.29 GiB | 30.29 GiB |
+| **Peak location** | **VAE decode**: +6.56 GiB transient | VAE decode |
 
 The engine's `peak_memory_mb` reports **reserved** memory. The recipe's 36.9 GB matches **allocated** memory, so the two numbers do not conflict.
 The memory history covers only the last ~3 s of the profiled request (`max_entries=100000`). The peak is therefore confirmed within VAE decode, but transient memory during early denoising steps is outside the recorded window.
