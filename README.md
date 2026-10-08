@@ -53,4 +53,7 @@ Gated or rate-limited downloads: create a Modal secret `huggingface` with `HF_TO
 
 | Run | GPU | Mode | Wall s (mean ± sd) | Largest stage | Peak device MiB | Notes |
 |---|---|---|---|---|---|---|
-| _pending_ | | | | | | |
+| `20261008T100913Z_a0_t2i_h200_eager_time` | H200 | T2I, eager | 7.387 ± 0.014 (published 7.34) | `diffuse` 7.180 s (97.2%) | 39 925 (engine 39 030) | 4/4 outputs bit-identical |
+| `20261008T103632Z_a0_edit_h200_eager_time` | H200 | Edit, 1 ref, eager | 8.464 ± 0.032 | `diffuse` 8.112 s (95.8%) | 41 123 | 4/4 outputs bit-identical |
+
+See [HANDOFF.md](HANDOFF.md) for trace findings and remaining work.

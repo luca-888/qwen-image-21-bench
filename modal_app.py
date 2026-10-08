@@ -10,6 +10,7 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -36,7 +37,11 @@ results_volume = modal.Volume.from_name("qwen21-results", create_if_missing=True
 SECRETS = [modal.Secret.from_name("huggingface")] if os.environ.get("HF_SECRET") else []
 
 image = (
-    modal.Image.from_registry(BASE_IMAGE)
+    # Modal detects the interpreter via `python`; the vllm image only ships `python3`
+    # (docker/Dockerfile.cuda adds the same symlink).
+    modal.Image.from_registry(
+        BASE_IMAGE, setup_dockerfile_commands=["RUN ln -sf /usr/bin/python3 /usr/bin/python"]
+    )
     .entrypoint([])
     .apt_install("git", "jq")
     .run_commands(
@@ -62,10 +67,10 @@ def prefetch() -> str:
 
 
 @app.function(volumes=VOLUMES, secrets=SECRETS, timeout=3 * 3600, gpu="H200")
-def run_bench(args: list[str], run_id: str) -> str:
+def run_bench(args: list[str], run_id: str, script: str = "a0_offline.py") -> str:
     out_dir = f"{RESULTS}/{run_id}"
     cmd = [
-        "python3", "/root/bench/a0_offline.py",
+        "python3", f"/root/bench/{script}",
         "--model", MODEL_ID,
         "--model-revision", MODEL_REVISION,
         "--vllm-omni-sha", VLLM_OMNI_SHA,
@@ -79,6 +84,95 @@ def run_bench(args: list[str], run_id: str) -> str:
         # Keep partial results (failures/OOMs must stay visible).
         results_volume.commit()
     return out_dir
+
+
+@app.function(timeout=900, cpu=2)
+def precheck() -> None:
+    """Cheap CPU-only check that imports and CLI parse before paying for a GPU."""
+    subprocess.run([
+        "python3", "-c",
+        "from vllm_omni.entrypoints.omni import Omni;"
+        "from vllm_omni.inputs.data import OmniDiffusionSamplingParams;"
+        "from vllm_omni.model_extras.qwen_image_21 import build_image_to_image_prompt;"
+        "print('imports ok')",
+    ], check=True)
+    subprocess.run(["python3", "/root/bench/a0_offline.py", "--help"], check=True, capture_output=True)
+
+
+PUBLISHED_EAGER_S = 7.34  # recipe: H200 BF16 eager steady-state
+STOP_DEVIATION = 0.15     # README stop condition
+
+
+def _stamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _bench(gpu: str, args: list[str], run_id: str) -> str:
+    fn = run_bench if gpu == "H200" else run_bench.with_options(gpu=gpu)
+    return fn.remote(args, run_id)
+
+
+@app.function(volumes={RESULTS: results_volume}, timeout=8 * 3600, cpu=1)
+def pipeline(gpu: str = "H200", with_edit: bool = True) -> dict:
+    """precheck → prefetch → t2i timing → (stop check) → t2i trace → edit timing → edit trace.
+
+    Runs remotely so it keeps going after the local client disconnects (`modal run --detach`).
+    Any failure stops the remaining GPU steps.
+    """
+    log: dict = {"gpu": gpu, "steps": []}
+    tag = gpu.replace(":", "x").lower()
+    base = ["--warmup", "1", "--feasibility", "1", "--measured", "2", "--enforce-eager"]
+
+    precheck.remote()
+    log["steps"].append("precheck ok")
+    prefetch.remote()
+    log["steps"].append("prefetch ok")
+
+    t2i = f"{_stamp()}_a0_t2i_{tag}_eager_time"
+    _bench(gpu, ["--mode", "t2i", *base], t2i)
+    results_volume.reload()
+    summary = json.loads(Path(f"{RESULTS}/{t2i}/summary.json").read_text())
+    mean = (summary.get("wall_s") or {}).get("mean")
+    log["t2i_time"] = {"run_id": t2i, "wall_mean_s": mean, "failures": summary.get("failures")}
+    if mean is None or summary.get("failures"):
+        log["stopped"] = "t2i timing had failures"
+        return log
+    if gpu == "H200" and abs(mean - PUBLISHED_EAGER_S) / PUBLISHED_EAGER_S > STOP_DEVIATION:
+        log["stopped"] = f"t2i mean {mean:.2f}s deviates >{STOP_DEVIATION:.0%} from {PUBLISHED_EAGER_S}s"
+        return log
+
+    t2i_trace = f"{_stamp()}_a0_t2i_{tag}_eager_trace"
+    _bench(gpu, ["--mode", "t2i", *base, "--trace"], t2i_trace)
+    log["t2i_trace"] = t2i_trace
+
+    if with_edit:
+        ref = f"{RESULTS}/{t2i}/images/measured_0.png"
+        edit = f"{_stamp()}_a0_edit_{tag}_eager_time"
+        _bench(gpu, ["--mode", "edit", "--image", ref, *base], edit)
+        log["edit_time"] = edit
+        edit_trace = f"{_stamp()}_a0_edit_{tag}_eager_trace"
+        _bench(gpu, ["--mode", "edit", "--image", ref, *base, "--trace"], edit_trace)
+        log["edit_trace"] = edit_trace
+
+    Path(f"{RESULTS}/pipeline_{_stamp()}.json").write_text(json.dumps(log, indent=2))
+    results_volume.commit()
+    return log
+
+
+@app.local_entrypoint()
+def all(gpu: str = "H200", with_edit: bool = True):
+    log = pipeline.remote(gpu, with_edit)
+    print(json.dumps(log, indent=2))
+    print("fetch with: modal volume get qwen21-results / results/")
+
+
+@app.local_entrypoint()
+def serving(gpu: str = "H200", eager: bool = True):
+    """A0 serving path: process-to-ready, client latency vs engine time, response size/decoding."""
+    run_id = f"{_stamp()}_a0_serving_t2i_{gpu.replace(':', 'x').lower()}_{'eager' if eager else 'default'}"
+    args = ["--warmup", "1", "--feasibility", "1", "--measured", "2"] + (["--enforce-eager"] if eager else [])
+    fn = run_bench if gpu == "H200" else run_bench.with_options(gpu=gpu)
+    print(fn.remote(args, run_id, "a0_serving.py"))
 
 
 @app.local_entrypoint()
