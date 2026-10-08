@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+*.json.gz
+*.pickle
+*.nsys-rep
+.DS_Store
