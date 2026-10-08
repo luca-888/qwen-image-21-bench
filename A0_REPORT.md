@@ -32,6 +32,12 @@ The plan (hypothesis, controls, run budget, stop condition) was declared in [REA
 
 Stage times come from `--enable-diffusion-pipeline-profiler` (synchronized). Raw rows: `results/*_time/runs.jsonl`.
 
+**Outputs** (measured run 0 of each configuration):
+
+| T2I output | Edit reference (`qwen_bear.png`) | Edit output |
+|:---:|:---:|:---:|
+| <img src="results/20261008T100913Z_a0_t2i_h200_eager_time/images/measured_0.png" width="260" alt="T2I output"> | <img src="inputs/qwen_bear.png" width="200" alt="Edit reference image"> | <img src="results/20261008T125447Z_a0_edit_h200_eager_time_bear/images/measured_0.png" width="260" alt="Edit output"> |
+
 ## 2. Serving path and response encoding (T2I)
 
 `vllm serve ... --omni --enforce-eager`, sequential `/v1/images/generations` requests with `response_format=b64_json`, measured n=2:
