@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">
+<rect width="760" height="380" fill="#fcfcfb"/>
+<text x="56.0" y="24.0" fill="#0b0b0b" text-anchor="start" font-size="15" font-weight="600">GPU busy time per denoising step</text>
+<text x="56.0" y="42.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">Kernel time attributed to each transformer forward, profiled run, ms</text>
+<line x1="56" x2="610" y1="336.0" y2="336.0" stroke="#e4e3df"/>
+<text x="48.0" y="340.0" fill="#52514e" text-anchor="end" font-size="12" font-weight="normal">100</text>
+<line x1="56" x2="610" y1="268.0" y2="268.0" stroke="#e4e3df"/>
+<text x="48.0" y="272.0" fill="#52514e" text-anchor="end" font-size="12" font-weight="normal">150</text>
+<line x1="56" x2="610" y1="200.0" y2="200.0" stroke="#e4e3df"/>
+<text x="48.0" y="204.0" fill="#52514e" text-anchor="end" font-size="12" font-weight="normal">200</text>
+<line x1="56" x2="610" y1="132.0" y2="132.0" stroke="#e4e3df"/>
+<text x="48.0" y="136.0" fill="#52514e" text-anchor="end" font-size="12" font-weight="normal">250</text>
+<line x1="56" x2="610" y1="64.0" y2="64.0" stroke="#e4e3df"/>
+<text x="48.0" y="68.0" fill="#52514e" text-anchor="end" font-size="12" font-weight="normal">300</text>
+<text x="56.0" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">0</text>
+<text x="169.1" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">10</text>
+<text x="282.1" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">20</text>
+<text x="395.2" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">30</text>
+<text x="508.2" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">40</text>
+<text x="610.0" y="354.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">49</text>
+<text x="333.0" y="372.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">Denoising step</text>
+<polyline points="56.0,96.2 67.3,270.7 78.6,272.0 89.9,271.7 101.2,252.7 112.5,268.3 123.8,277.9 135.1,278.2 146.4,278.4 157.8,278.4 169.1,272.8 180.4,276.8 191.7,278.1 203.0,278.5 214.3,278.5 225.6,278.5 236.9,273.4 248.2,271.9 259.5,269.9 270.8,274.7 282.1,273.4 293.4,271.7 304.7,276.7 316.0,277.0 327.3,276.0 338.7,271.6 350.0,273.7 361.3,274.2 372.6,272.5 383.9,275.3 395.2,271.5 406.5,273.1 417.8,274.4 429.1,275.8 440.4,274.7 451.7,271.0 463.0,271.8 474.3,274.0 485.6,269.3 496.9,268.8 508.2,273.6 519.6,273.5 530.9,274.8 542.2,275.9 553.5,274.3 564.8,274.3 576.1,276.3 587.4,272.7 598.7,276.4 610.0,275.9" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="56.0" cy="96.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="622" cy="249.8" r="4" fill="#eb6834"/>
+<text x="632.0" y="253.8" fill="#0b0b0b" text-anchor="start" font-size="12" font-weight="600">Edit (1 ref)</text>
+<text x="632.0" y="268.8" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">steps 1–49: 145.7 ms</text>
+<polyline points="56.0,297.2 67.3,294.8 78.6,294.4 89.9,294.5 101.2,294.3 112.5,292.0 123.8,294.6 135.1,294.8 146.4,294.7 157.8,294.7 169.1,294.7 180.4,289.3 191.7,293.7 203.0,294.7 214.3,294.9 225.6,294.9 236.9,295.0 248.2,289.9 259.5,289.4 270.8,290.9 282.1,291.8 293.4,291.8 304.7,289.0 316.0,291.7 327.3,292.3 338.7,293.2 350.0,292.1 361.3,293.4 372.6,292.2 383.9,294.1 395.2,294.3 406.5,289.9 417.8,291.5 429.1,291.1 440.4,291.3 451.7,290.7 463.0,290.7 474.3,291.5 485.6,291.2 496.9,292.3 508.2,291.8 519.6,291.0 530.9,292.3 542.2,290.8 553.5,292.2 564.8,294.0 576.1,293.3 587.4,291.2 598.7,292.5 610.0,292.3" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="56.0" cy="297.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="622" cy="300.5" r="4" fill="#2a78d6"/>
+<text x="632.0" y="304.5" fill="#0b0b0b" text-anchor="start" font-size="12" font-weight="600">T2I</text>
+<text x="632.0" y="319.5" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">steps 1–49: 132.0 ms</text>
+<text x="66.0" y="94.2" fill="#0b0b0b" text-anchor="start" font-size="12" font-weight="600">Step 0: 276.3 ms</text>
+<text x="66.0" y="109.2" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">includes prefix prefill of the reference image</text>
+</svg>

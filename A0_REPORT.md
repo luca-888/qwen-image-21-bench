@@ -26,7 +26,7 @@ The plan (hypothesis, controls, run budget, stop condition) was declared in [REA
 | `text_encoder.forward` | 0.040 s (0.5%) | 0.076 s (0.9%) |
 | `vae.encode` | — | 0.033 s (0.4%) |
 | `vae.decode` | 0.111 s (1.5%) | 0.111 s (1.3%) |
-| Engine init (excluded) | 34.9 s | — |
+| Engine init (excluded) | 34.9 s | 29.1 s |
 | Failures / OOM | 0 | 0 |
 | Output determinism | 4/4 runs bit-identical | 4/4 bit-identical |
 
@@ -46,18 +46,19 @@ Stage times come from `--enable-diffusion-pipeline-profiler` (synchronized). Raw
 |---|---:|
 | Process-to-ready (including weight load) | 72.1 s |
 | Client total latency | **7.453 s** |
-| Engine `stage_gen_time_ms` | 7.342 s (142.8 ms per denoise step) |
+| Engine `stage_gen_time_ms` | 7.342 s |
+| Engine `denoise_step_latency_ms` | 142.8 ms per step (× 50 = 7.14 s of the 7.342 s) |
 | **Server: generation done → response sent** (PNG encode + base64 + JSON) | **≈ 0.105 s (1.4%)** |
 | Response body transfer (5.6 MB JSON, 4.2 MB PNG) | 0.006 s |
 | Client JSON / base64 / PNG decode | 0.009 / 0.012 / 0.020 s |
 
 Serving outputs are **pixel-identical** to offline outputs. The PNG bytes differ only because of the PNG encoder.
 
-Cross-check with `benchmarks/diffusion/diffusion_benchmark_serving.py` (`--dataset random --max-concurrency 1`, 3 prompts): mean latency 7.918 s against engine `stage_0_gen_ms` 7.375 s. That benchmark uses `/v1/chat/completions` with random prompts, so the request-path overhead there (≈0.54 s) is not directly comparable. It is flagged for follow-up.
+Cross-check with `benchmarks/diffusion/diffusion_benchmark_serving.py` (`--dataset random --max-concurrency 1`, 3 prompts, 0 failures): engine `stage_0_gen_ms` 7.375 s, consistent with the 7.342 s above.
 
 ## 3. Where the time goes inside denoising (torch-profiler traces)
 
-These proportions come from profiled runs, which are slower. Analysis: `python3 bench/analyze_trace.py <trace>`.
+These proportions come from profiled runs, which are slower. Analysis: `python3 bench/analyze_trace.py <trace>`. Figures: `python3 bench/plot_trace.py <t2i trace_analysis.json> <edit trace_analysis.json>`.
 
 **Per step, GPU busy time vs wall time**
 
@@ -67,6 +68,8 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 | GPU busy, steps 1–49 (mean) | 132.0 ms | 145.7 ms (+10%) |
 | Unprofiled wall time per step (`diffuse`/50) | 143.6 ms | 160.0 ms |
 | Kernels per step | ≈1,700 | ≈1,720 |
+
+<img src="figures/a0_step_gpu_busy.svg" width="760" alt="GPU busy time per denoising step, T2I vs edit. Edit step 0 is 276.3 ms; steps 1–49 average 145.7 ms for edit and 132.0 ms for T2I.">
 
 - In T2I eager mode, about **8% of each step is GPU idle** (143.6 ms wall vs 132.0 ms of kernels). The cause is launch/host overhead from about 1,700 small kernels per step. This is the headroom for CUDA Graph and compile (A2).
 - With a short T2I prompt, **prefix prefill is negligible**: step 0 costs the same as the other steps.
@@ -79,7 +82,9 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 | GEMM (almost all `nvjet_sm90_tst_256x128`) | **54.2%** | 48.9% |
 | Elementwise / copy / cat / dtype casts | **32.8%** | 31.5% |
 | FlashAttention-3 (SM90) | 9.3% | 16.1% |
-| Reduce + norm | 3.3% | ~3% |
+| Reduce + norm | 3.2% | 3.0% |
+
+<img src="figures/a0_kernel_classes.svg" width="760" alt="GPU kernel time by kernel class, T2I (6,718 ms) vs edit (7,625 ms), stacked by GEMM, elementwise/copy, FlashAttention-3, reduce + norm, other.">
 
 **GPU time by module** (share of transformer-block time; T2I / Edit)
 
@@ -97,7 +102,7 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 | Resident after request (weights, etc.) | 30.29 GiB | 30.29 GiB |
 | **Peak location** | **VAE decode**: +6.56 GiB transient | VAE decode |
 
-The engine's `peak_memory_mb` reports **reserved** memory. The recipe's 36.9 GB matches **allocated** memory, so the two numbers do not conflict.
+The engine's `peak_memory_mb` reports **reserved** memory. The recipe's 36.9 GB matches **allocated** memory, so the two numbers do not conflict. This assumes the recipe's "GB" is binary (GiB), as PyTorch memory counters are usually reported; 36.86 GiB is 39.58 GB in decimal units.
 The memory history covers only the last ~3 s of the profiled request (`max_entries=100000`). The peak is therefore confirmed within VAE decode, but transient memory during early denoising steps is outside the recorded window.
 
 ## 5. Conclusion: largest measured cost

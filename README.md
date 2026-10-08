@@ -18,14 +18,19 @@ Contribution to [vllm-project/vllm-omni#8586](https://github.com/vllm-project/vl
 
 `--enable-diffusion-pipeline-profiler` times `tokenizer.forward`, `text_encoder.forward`, `vae.encode`, `diffuse`, and `vae.decode`.
 The torch trace splits `diffuse` into prefix prefill and per-step decode.
-Response encoding is measured on the serving path (follow-up).
+Response encoding is measured on the serving path (`bench/a0_serving.py`).
 
 ## Layout
 
 ```
-modal_app.py        Modal image (pinned SHA), volumes, entrypoints
-bench/a0_offline.py runs inside the container; one engine, warmup → feasibility → measured
-results/<run_id>/   pulled from the Modal volume: env.json, runs.jsonl, summary.json, images/, trace/
+modal_app.py           Modal image (pinned SHA), volumes, entrypoints
+bench/a0_offline.py    runs inside the container; one engine, warmup → feasibility → measured
+bench/a0_serving.py    runs inside the container; `vllm serve`, sequential requests, shared serving benchmark
+bench/analyze_trace.py offline analysis of a torch-profiler trace → trace_analysis.json
+bench/plot_trace.py    draws figures/*.svg from two trace_analysis.json files
+inputs/                reference image for editing (the recipe's qwen_bear.png)
+figures/               figures used in A0_REPORT.md
+results/<run_id>/      pulled from the Modal volume: env.json, runs.jsonl, summary.json, images/, trace/
 ```
 
 Large traces (>50 MB) are published as GitHub Release assets, not committed.
@@ -44,6 +49,13 @@ Editing with a single reference image (the recipe's `qwen_bear.png`, committed u
 
 ```bash
 modal run modal_app.py::a0 --mode edit --image inputs/qwen_bear.png
+```
+
+Serving path, and the full A0 set (T2I and edit, timing and trace) in one go:
+
+```bash
+modal run --detach modal_app.py::serving
+modal run --detach modal_app.py::all
 ```
 
 Other GPUs: `--gpu H100`, `--gpu A100-80GB`, `--gpu L40S`. Don't pool results across GPU types.

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">
+<rect width="760" height="250" fill="#fcfcfb"/>
+<text x="96.0" y="24.0" fill="#0b0b0b" text-anchor="start" font-size="15" font-weight="600">GPU kernel time by kernel class</text>
+<text x="96.0" y="42.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">Whole request, profiled run, ms; segment labels are the share of that request</text>
+<rect x="96" y="58" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="111.0" y="67.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">GEMM</text>
+<rect x="160" y="58" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="175.0" y="67.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">Elementwise / copy</text>
+<rect x="322" y="58" width="10" height="10" rx="2" fill="#1baf7a"/>
+<text x="337.0" y="67.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">FlashAttention-3</text>
+<rect x="470" y="58" width="10" height="10" rx="2" fill="#eda100"/>
+<text x="485.0" y="67.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">Reduce + norm</text>
+<rect x="597" y="58" width="10" height="10" rx="2" fill="#e87ba4"/>
+<text x="612.0" y="67.0" fill="#52514e" text-anchor="start" font-size="12" font-weight="normal">Other</text>
+<line x1="96.0" x2="96.0" y1="88" y2="202" stroke="#e4e3df"/>
+<text x="96.0" y="218.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">0</text>
+<line x1="244.5" x2="244.5" y1="88" y2="202" stroke="#e4e3df"/>
+<text x="244.5" y="218.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">2,000</text>
+<line x1="393.0" x2="393.0" y1="88" y2="202" stroke="#e4e3df"/>
+<text x="393.0" y="218.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">4,000</text>
+<line x1="541.5" x2="541.5" y1="88" y2="202" stroke="#e4e3df"/>
+<text x="541.5" y="218.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">6,000</text>
+<line x1="690.0" x2="690.0" y1="88" y2="202" stroke="#e4e3df"/>
+<text x="690.0" y="218.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">8,000</text>
+<text x="393.0" y="242.0" fill="#52514e" text-anchor="middle" font-size="12" font-weight="normal">GPU kernel time (ms)</text>
+<text x="86.0" y="117.0" fill="#0b0b0b" text-anchor="end" font-size="12" font-weight="600">T2I</text>
+<rect x="96.0" y="96" width="268.3" height="34" rx="2" fill="#2a78d6"><title>GEMM: 3,640 ms (54.2%)</title></rect>
+<text x="230.1" y="117.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">54.2%</text>
+<rect x="366.3" y="96" width="161.5" height="34" rx="2" fill="#eb6834"><title>Elementwise / copy: 2,203 ms (32.8%)</title></rect>
+<text x="447.1" y="117.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">32.8%</text>
+<rect x="529.8" y="96" width="44.5" height="34" rx="2" fill="#1baf7a"><title>FlashAttention-3: 626 ms (9.3%)</title></rect>
+<text x="552.1" y="117.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">9.3%</text>
+<rect x="576.3" y="96" width="14.2" height="34" rx="2" fill="#eda100"><title>Reduce + norm: 218 ms (3.2%)</title></rect>
+<rect x="592.5" y="96" width="0.5" height="34" rx="2" fill="#e87ba4"><title>Other: 32 ms (0.5%)</title></rect>
+<text x="600.8" y="117.0" fill="#0b0b0b" text-anchor="start" font-size="12" font-weight="normal">6,718 ms</text>
+<text x="86.0" y="181.0" fill="#0b0b0b" text-anchor="end" font-size="12" font-weight="600">Edit (1 ref)</text>
+<rect x="96.0" y="160" width="274.7" height="34" rx="2" fill="#2a78d6"><title>GEMM: 3,726 ms (48.9%)</title></rect>
+<text x="233.3" y="181.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">48.9%</text>
+<rect x="372.7" y="160" width="176.3" height="34" rx="2" fill="#eb6834"><title>Elementwise / copy: 2,401 ms (31.5%)</title></rect>
+<text x="460.8" y="181.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">31.5%</text>
+<rect x="550.9" y="160" width="89.3" height="34" rx="2" fill="#1baf7a"><title>FlashAttention-3: 1,230 ms (16.1%)</title></rect>
+<text x="595.6" y="181.0" fill="#ffffff" text-anchor="middle" font-size="12" font-weight="600">16.1%</text>
+<rect x="642.3" y="160" width="15.1" height="34" rx="2" fill="#eda100"><title>Reduce + norm: 230 ms (3.0%)</title></rect>
+<rect x="659.4" y="160" width="0.8" height="34" rx="2" fill="#e87ba4"><title>Other: 37 ms (0.5%)</title></rect>
+<text x="668.1" y="181.0" fill="#0b0b0b" text-anchor="start" font-size="12" font-weight="normal">7,625 ms</text>
+</svg>
