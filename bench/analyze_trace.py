@@ -76,6 +76,9 @@ def main() -> None:
         i, j = bisect.bisect_left(launches, a), bisect.bisect_right(launches, b)
         return (prefix[j] - prefix[i]) / 1e3
 
+    def gpu_count(a: float, b: float) -> int:
+        return bisect.bisect_right(launches, b) - bisect.bisect_left(launches, a)
+
     py = [e for e in events if e.get("cat") == "python_function"]
 
     def frames(pat: str) -> list[tuple[float, float]]:
@@ -93,7 +96,9 @@ def main() -> None:
         }
 
     steps = frames(STEP)
-    per = [{"cpu_wall_ms": (b - a) / 1e3, "gpu_busy_ms": gpu_ms(a, b)} for a, b in steps]
+    # gpu_kernels counts kernels, memcpys, and memsets launched inside the step's Python frame.
+    per = [{"cpu_wall_ms": (b - a) / 1e3, "gpu_busy_ms": gpu_ms(a, b), "gpu_kernels": gpu_count(a, b)}
+           for a, b in steps]
     if per:
         rest = per[1:] or per
         out["steps"] = {
@@ -101,6 +106,7 @@ def main() -> None:
             "first": per[0],
             "rest_mean_gpu_busy_ms": statistics.fmean(p["gpu_busy_ms"] for p in rest),
             "rest_mean_cpu_wall_ms": statistics.fmean(p["cpu_wall_ms"] for p in rest),
+            "rest_mean_gpu_kernels": statistics.fmean(p["gpu_kernels"] for p in rest),
             "per_step": per,
         }
 
@@ -138,7 +144,8 @@ def main() -> None:
     if per:
         s = out["steps"]
         print(f"== Denoise steps: n={s['n']}  first gpu {s['first']['gpu_busy_ms']:.1f} ms  "
-              f"rest mean gpu {s['rest_mean_gpu_busy_ms']:.1f} ms / cpu {s['rest_mean_cpu_wall_ms']:.1f} ms")
+              f"rest mean gpu {s['rest_mean_gpu_busy_ms']:.1f} ms / cpu {s['rest_mean_cpu_wall_ms']:.1f} ms / "
+              f"{s['rest_mean_gpu_kernels']:.0f} kernels")
     blk = out["modules"].get("block", {}).get("gpu_busy_ms") or 1.0
     print("== Modules (GPU, share of all transformer-block time)")
     for k, v in out["modules"].items():

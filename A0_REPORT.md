@@ -8,7 +8,7 @@ The plan (hypothesis, controls, run budget, stop condition) was declared in [REA
 | | |
 |---|---|
 | Code | vllm-omni `3dc35694b3d4` (clean checkout, no local changes), base image `vllm/vllm-openai:v0.31.0` |
-| Packages | vllm 0.31.0, torch 2.13.0+cu130, transformers 5.14.1, diffusers 0.40.0, triton 3.7.1 |
+| Packages | vllm 0.31.0, torch 2.13.0+cu130, transformers 5.14.1, diffusers 0.40.0, triton 3.7.1. The published 7.34 s was recorded with vLLM 0.30.0 and torch 2.13.0+cu129 (per #8586), so the environment differs from the published run |
 | Model | `Qwen/Qwen-Image-2.1@d26bb61231c3` |
 | Hardware | 1× NVIDIA H200 141 GB (Modal), driver 580.95.05; GPU UUIDs in each `env.json` |
 | Workload | BF16, eager (`enforce_eager=True`), 1024×1024, 50 steps, seed 42, `true_cfg_scale=1.0`. Default prefix KV cache; no offload, quantization, or VAE tiling |
@@ -38,6 +38,7 @@ Measurement boundaries:
 - Wall time covers one `omni.generate(...)` call. Engine init, the warmup, and PNG encoding/writing of the output are outside it. The engine's own `stage_0_gen_ms` agrees within 3 ms (7.384 s T2I, 8.361 s edit).
 - "±" is the sample standard deviation of the two measured runs in one engine process (the declared budget), not a confidence interval. It understates the spread between containers; see the end of this section.
 - The stock profiler times `text_encoder.forward`, `vae.encode`, `diffuse`, and `vae.decode` only (its `tokenizer.forward` target does not exist on this pipeline).
+- #8099 reports four H200 eager BF16 1024² times: 7.30 s (TP table), 7.31 s (Diffusers A/B table), 7.34 s (FP8 table), and 8.28 s (CUDA-graph four-mode sweep). This run agrees with the first three; the four-mode sweep's eager time is the outlier.
 
 ### Full stage accounting
 
@@ -66,7 +67,7 @@ The four stock stages leave 0.8% (T2I) and 1.7% (edit) of the request unnamed. A
 
 ### Spread between containers
 
-Every run landed on a different physical H200 (UUIDs in each `env.json`). Wall time per image, mean of the 2 measured requests:
+Each run in this table landed on a different physical H200 (UUIDs in each `env.json`). Wall time per image, mean of the 2 measured requests:
 
 | Run | T2I | Edit (1 ref) |
 |---|---:|---:|
@@ -92,11 +93,13 @@ The range is 1.1% for T2I and 1.6% for editing, against 0.2% and 0.01% within on
 | Client total latency | **7.453 s** |
 | Engine `stage_gen_time_ms` | 7.342 s |
 | Engine `denoise_step_latency_ms` | 142.8 ms per step (× 50 = 7.14 s of the 7.342 s) |
-| **Server: generation done → response sent** (PNG encode + base64 + JSON) | **≈ 0.105 s (1.4%)** |
+| **Time to response headers − engine time** | **≤ 0.105 s (1.4%)** |
 | Response body transfer (5.6 MB JSON, 4.2 MB PNG) | 0.006 s |
 | Client JSON / base64 / PNG decode | 0.009 / 0.012 / 0.020 s |
 
-Serving outputs are **pixel-identical** to offline outputs. The PNG bytes differ only because of the PNG encoder.
+The 0.105 s is a residual, not a server-side measurement: client time to response headers (7.447 s) minus the engine's `stage_gen_time_ms` (7.342 s). It contains response encoding (PNG + base64 + JSON) together with HTTP handling and the hand-off between the API server and the engine, so it is an upper bound on response encoding.
+
+Serving outputs are **pixel-identical** to offline outputs. Decoded RGB pixels of all 16 T2I images (offline timing, trace, serving, `--mem`, and `--stages` runs, on 4 different H200s) share one hash, and so do all 12 edit images (4 runs, 4 different H200s): `python3 bench/check_pixels.py results --json results/pixel_check.json`. The PNG bytes differ between offline and serving only because of the PNG encoder.
 
 Cross-check with `benchmarks/diffusion/diffusion_benchmark_serving.py` (`--dataset random --max-concurrency 1`, 3 prompts, 0 failures): engine `stage_0_gen_ms` 7.375 s, consistent with the 7.342 s above.
 
@@ -111,11 +114,12 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 | GPU busy, step 0 | 128.5 ms | **276.3 ms** (includes prefix prefill of the reference image) |
 | GPU busy, steps 1–49 (mean) | 132.0 ms | 145.7 ms (+10%) |
 | Unprofiled wall time per step (`diffuse`/50) | 143.6 ms | 160.0 ms |
-| Kernels per step | ≈1,700 | ≈1,720 |
+| GPU launches per step, steps 1–49 (mean; kernels + memcpy/memset) | 1,832 | 1,832 |
+| GPU launches, step 0 | 1,972 | 2,074 |
 
 <img src="figures/a0_step_gpu_busy.svg" width="760" alt="GPU busy time per denoising step, T2I vs edit. Edit step 0 is 276.3 ms; steps 1–49 average 145.7 ms for edit and 132.0 ms for T2I.">
 
-- In T2I eager mode, about **8% of each step is GPU idle** (143.6 ms wall vs 132.0 ms of kernels). The cause is launch/host overhead from about 1,700 small kernels per step. This is the headroom for CUDA Graph and compile (A2).
+- In T2I eager mode, about **8% of each step is GPU idle** (143.6 ms unprofiled wall vs 132.0 ms of kernel time in the profiled run; both runs used the same GPU, `GPU-42ae650a`). With about 1,830 launches per step this is consistent with launch/host overhead, but the trace does not separate launch cost from other host-side gaps. It is the headroom CUDA Graph and compile (A2) would target.
 - With a short T2I prompt, **prefix prefill is negligible**: step 0 costs the same as the other steps.
 - With one reference image, prefill adds **about 131 ms once** (step 0). Every later step is **about 14 ms slower** because attention runs over the longer cached prefix. Edit attention kernel time doubles (626 → 1,230 ms over 50 steps). Together these account for most of the +0.82 s `diffuse` difference.
 
@@ -160,10 +164,10 @@ All values are binary units (1 GiB = 1024³ bytes).
 1. **Denoising is 96–97% of end-to-end latency.** Within it:
    - GEMM is about half of GPU time.
    - **Elementwise/copy kernels are about a third**, which points to fusion (A1). This is H200 eager mode. #7945 measured a fusion-only gain on A100 with offload, a different configuration.
-   - Launch overhead is about 8% of wall time in eager mode, which points to graph/compile (A2).
+   - The GPU is idle for about 8% of wall time in eager mode, consistent with launch/host overhead, which points to graph/compile (A2).
 2. **For editing**, the extra cost is the reference-image prefix: a one-time ~131 ms prefill plus ~14 ms per step of longer attention. That is the workload for A3/B2.
 3. **Peak memory is set by VAE decode**, not by denoising: +6.6 GiB over the 30.3 GiB that stays allocated between requests. VAE tiling is the lever here (C2).
-4. Everything outside denoising (pre-processing, prompt and image encoding, VAE decode, post-processing) totals 3.1% of a T2I request and 4.7% of an edit request; no single step exceeds 1.6%. Response encoding on the serving path adds 1.4%.
+4. Everything outside denoising (pre-processing, prompt and image encoding, VAE decode, post-processing) totals 3.1% of a T2I request and 4.7% of an edit request; no single step exceeds 1.6%. Response encoding on the serving path adds at most 1.4%.
 
 ## Artifacts
 
@@ -173,4 +177,13 @@ All values are binary units (1 GiB = 1024³ bytes).
 - Memory diagnostic runs: `results/20261008T161941Z_a0_t2i_h200_eager_mem`, `results/20261008T162441Z_a0_edit_h200_eager_mem` (`engine.log`, `engine_peak_memory.json`)
 - Stage diagnostic runs: `results/20261008T163033Z_a0_t2i_h200_eager_stages`, `results/20261008T163033Z_a0_edit_h200_eager_stages` (`engine.log`, `stage_log.json`)
 - Reproduce the diagnostics: `modal run modal_app.py::a0 --mode t2i --mem --feasibility 0`, and the same with `--stages`; for editing add `--mode edit --image inputs/qwen_bear.png`
+- Pixel check across all outputs: `results/pixel_check.json` (`bench/check_pixels.py`)
 - Reproduce: `modal run --detach modal_app.py::all` and `modal run --detach modal_app.py::serving`
+
+## Corrections (2026-10-09)
+
+- Launches per step were stated as ≈1,700 (T2I) and ≈1,720 (edit), an estimate no script produced. `bench/analyze_trace.py` now counts them per step: 1,832 for both on steps 1–49.
+- The 8% GPU idle time was attributed to launch overhead as a fact; the trace only shows it is consistent with that.
+- The 0.105 s serving residual was labelled as response encoding; it also includes HTTP handling and the API-server/engine hand-off, so it is an upper bound.
+- Pixel identity between serving and offline outputs is now checked by `bench/check_pixels.py`.
+- Added the environment difference from the published run and the four published eager times in #8099.

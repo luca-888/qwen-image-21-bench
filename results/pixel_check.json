@@ -1,0 +1,46 @@
+{
+  "t2i": {
+    "images": 16,
+    "distinct_pixel_hashes": 1,
+    "by_hash": {
+      "59f66d3d3e605e07ab2467be32d1b099258ae92fbf26e777b71f817f83a9a064": [
+        "20261008T100913Z_a0_t2i_h200_eager_time/images/feasibility_0.png",
+        "20261008T100913Z_a0_t2i_h200_eager_time/images/measured_0.png",
+        "20261008T100913Z_a0_t2i_h200_eager_time/images/measured_1.png",
+        "20261008T100913Z_a0_t2i_h200_eager_time/images/warmup_0.png",
+        "20261008T101117Z_a0_t2i_h200_eager_trace/images/trace_0.png",
+        "20261008T101117Z_a0_t2i_h200_eager_trace/images/warmup_0.png",
+        "20261008T104032Z_a0_serving_t2i_h200_eager/images/feasibility_0.png",
+        "20261008T104032Z_a0_serving_t2i_h200_eager/images/measured_0.png",
+        "20261008T104032Z_a0_serving_t2i_h200_eager/images/measured_1.png",
+        "20261008T104032Z_a0_serving_t2i_h200_eager/images/warmup_0.png",
+        "20261008T161941Z_a0_t2i_h200_eager_mem/images/measured_0.png",
+        "20261008T161941Z_a0_t2i_h200_eager_mem/images/measured_1.png",
+        "20261008T161941Z_a0_t2i_h200_eager_mem/images/warmup_0.png",
+        "20261008T163033Z_a0_t2i_h200_eager_stages/images/measured_0.png",
+        "20261008T163033Z_a0_t2i_h200_eager_stages/images/measured_1.png",
+        "20261008T163033Z_a0_t2i_h200_eager_stages/images/warmup_0.png"
+      ]
+    }
+  },
+  "edit": {
+    "images": 12,
+    "distinct_pixel_hashes": 1,
+    "by_hash": {
+      "312ace2cf1785fb44308439297cf76878a3bb1b3589e9a32b55551288b07db0d": [
+        "20261008T125447Z_a0_edit_h200_eager_time_bear/images/feasibility_0.png",
+        "20261008T125447Z_a0_edit_h200_eager_time_bear/images/measured_0.png",
+        "20261008T125447Z_a0_edit_h200_eager_time_bear/images/measured_1.png",
+        "20261008T125447Z_a0_edit_h200_eager_time_bear/images/warmup_0.png",
+        "20261008T125451Z_a0_edit_h200_eager_trace_bear/images/trace_0.png",
+        "20261008T125451Z_a0_edit_h200_eager_trace_bear/images/warmup_0.png",
+        "20261008T162441Z_a0_edit_h200_eager_mem/images/measured_0.png",
+        "20261008T162441Z_a0_edit_h200_eager_mem/images/measured_1.png",
+        "20261008T162441Z_a0_edit_h200_eager_mem/images/warmup_0.png",
+        "20261008T163033Z_a0_edit_h200_eager_stages/images/measured_0.png",
+        "20261008T163033Z_a0_edit_h200_eager_stages/images/measured_1.png",
+        "20261008T163033Z_a0_edit_h200_eager_stages/images/warmup_0.png"
+      ]
+    }
+  }
+}

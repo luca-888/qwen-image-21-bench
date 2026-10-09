@@ -29,6 +29,7 @@ bench/a0_offline.py    runs inside the container; one engine, warmup → feasibi
 bench/a0_serving.py    runs inside the container; `vllm serve`, sequential requests, shared serving benchmark
 bench/analyze_trace.py offline analysis of a torch-profiler trace → trace_analysis.json
 bench/analyze_memory_snapshot.py  offline analysis of a CUDA memory snapshot → memory_snapshot_analysis.json
+bench/check_pixels.py  compares decoded output pixels across all runs → results/pixel_check.json
 bench/plot_trace.py    draws figures/*.svg from two trace_analysis.json files
 bench/stagehook/       import hook used only by --stages (extends the pipeline profiler's targets)
 inputs/                reference image for editing (the recipe's qwen_bear.png)
@@ -72,6 +73,6 @@ Gated or rate-limited downloads: create a Modal secret `huggingface` with `HF_TO
 |---|---|---|---|---|---|---|
 | `20261008T100913Z_a0_t2i_h200_eager_time` | H200 | T2I, eager | 7.387 ± 0.014 (published 7.34) | `diffuse` 7.180 s (97.2%) | 39 925 (engine 39 030) | 4/4 outputs bit-identical |
 | `20261008T125447Z_a0_edit_h200_eager_time_bear` | H200 | Edit, 1 ref (`qwen_bear.png`), eager | 8.363 ± 0.001 | `diffuse` 7.999 s (95.6%) | 41 121 | 4/4 outputs bit-identical |
-| `20261008T104032Z_a0_serving_t2i_h200_eager` | H200 | T2I serving, eager | client 7.453 (engine 7.342) | `diffuse`; response encoding ≈0.105 s | 39 799 | pixel-identical to offline |
+| `20261008T104032Z_a0_serving_t2i_h200_eager` | H200 | T2I serving, eager | client 7.453 (engine 7.342) | `diffuse`; response encoding ≤0.105 s (residual) | 39 799 | pixel-identical to offline |
 
 Full write-up: [A0_REPORT.md](A0_REPORT.md). Traces and memory snapshots: release [`a0-h200-20261008`](https://github.com/luca-888/qwen-image-21-bench/releases/tag/a0-h200-20261008).
