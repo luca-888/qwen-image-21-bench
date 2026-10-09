@@ -11,7 +11,9 @@ The plan (hypothesis, controls, run budget, stop condition) was declared in [REA
 | Packages | vllm 0.31.0, torch 2.13.0+cu130, transformers 5.14.1, diffusers 0.40.0, triton 3.7.1. The published 7.34 s was recorded with vLLM 0.30.0 and torch 2.13.0+cu129 (per #8586), so the environment differs from the published run |
 | Model | `Qwen/Qwen-Image-2.1@d26bb61231c3` |
 | Hardware | 1× NVIDIA H200 141 GB (Modal), driver 580.95.05; GPU UUIDs in each `env.json` |
-| Workload | BF16, eager (`enforce_eager=True`), 1024×1024, 50 steps, seed 42, `true_cfg_scale=1.0`. Default prefix KV cache; no offload, quantization, or VAE tiling |
+| Workload | BF16, eager (`enforce_eager=True`), 1024×1024, 50 steps, seed 42, `true_cfg_scale=1.0`. No compile, no CUDA-graph decode, no offload, no quantization, no VAE tiling |
+| Attention backend | `FLASH_ATTN`, resolved by the platform default (no `diffusion_attention_config` passed): on a non-Blackwell CUDA GPU the default is `FLASH_ATTN` when a FlashAttention implementation is importable, otherwise `TORCH_SDPA` (`platforms/cuda/platform.py`). The kernels that ran are FlashAttention-3. The serving log records the resolution (`server.log`: "Resolved diffusion attention backend 'FLASH_ATTN' for role='self' via platform default"); the offline traces show the same FlashAttention-3 SM90 kernel (`flash::FlashAttnFwdSm90`). The `flash-attn` pip package is not installed (`env.json`) |
+| Cache dtype | Prefix KV cache on, stored in the native dtype (BF16): `extras["prefix_kv_cache_dtype"]` is unset, which the transformer treats as native storage (`qwen_image_21_transformer.py`, `_normalize_prefix_kv_cache_dtype`). `diffusion_kv_cache_dtype` is also unset, so attention compute is not quantized. Neither value is logged at runtime; both are read from the pinned source and the arguments in `bench/a0_offline.py` and `server_cmd.txt` |
 | T2I prompt | "A ceramic teapot on a wooden table" |
 | Edit | Same settings plus one reference image, the recipe's `qwen_bear.png` (514×556, committed as `inputs/qwen_bear.png`); prompt "Let this mascot dance under the moon, surrounded by floating stars", as in the recipe's editing example |
 | Budget | Per config: 1 warmup (excluded), 1 feasibility run, 2 measured runs, all in one engine process. Traces, and the `--mem` and `--stages` diagnostics (warmup + 2 measured), come from separate runs and are not used for the headline timing |
@@ -187,3 +189,4 @@ All values are binary units (1 GiB = 1024³ bytes).
 - The 0.105 s serving residual is stated as an upper bound on response encoding; it also includes HTTP handling and the API-server/engine hand-off.
 - Pixel identity between serving and offline outputs is now checked by `bench/check_pixels.py`.
 - Added the environment difference from the published run and the four published eager times in #8099.
+- Added the attention backend and the cache dtype to the setup table. No rerun; the existing `env.json` files were not edited, and new runs record the requested values under `runtime_config`.

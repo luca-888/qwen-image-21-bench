@@ -92,6 +92,10 @@ def collect_env(args: argparse.Namespace) -> dict:
         "nvidia_smi_topo": sh("nvidia-smi topo -m"),
         "hostname": platform.node(),
         "cpu": sh("lscpu | grep 'Model name'"),
+        # Requested values, not resolved ones: neither script passes these, so the engine uses its
+        # defaults (platform-default attention backend, prefix KV stored in the native dtype).
+        "runtime_config": {"diffusion_attention_config": None, "prefix_kv_cache_dtype": None,
+                           "diffusion_kv_cache_dtype": None},
         "workload": {k: getattr(args, k) for k in
                      ["mode", "prompt", "image", "height", "width", "steps", "seed",
                       "true_cfg_scale", "enforce_eager", "warmup", "feasibility", "measured", "trace", "mem", "stages"]},
