@@ -182,8 +182,8 @@ All values are binary units (1 GiB = 1024³ bytes).
 
 ## Corrections (2026-10-09)
 
-- Launches per step were stated as ≈1,700 (T2I) and ≈1,720 (edit), an estimate no script produced. `bench/analyze_trace.py` now counts them per step: 1,832 for both on steps 1–49.
-- The 8% GPU idle time was attributed to launch overhead as a fact; the trace only shows it is consistent with that.
-- The 0.105 s serving residual was labelled as response encoding; it also includes HTTP handling and the API-server/engine hand-off, so it is an upper bound.
+- Launches per step corrected from ≈1,700 (T2I) and ≈1,720 (edit) to 1,832 for both on steps 1–49, now counted per step by `bench/analyze_trace.py`.
+- The 8% GPU idle time is described as consistent with launch/host overhead; the trace does not isolate the cause.
+- The 0.105 s serving residual is stated as an upper bound on response encoding; it also includes HTTP handling and the API-server/engine hand-off.
 - Pixel identity between serving and offline outputs is now checked by `bench/check_pixels.py`.
 - Added the environment difference from the published run and the four published eager times in #8099.
