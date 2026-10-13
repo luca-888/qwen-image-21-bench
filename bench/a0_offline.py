@@ -50,6 +50,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--measured", type=int, default=2)
     p.add_argument("--trace", action="store_true",
                    help="Diagnostic run: torch-profile one request after warmup. Not for timing.")
+    p.add_argument("--trace-light", action="store_true",
+                   help="Like --trace, but without stack, shapes and memory recording (lower host "
+                        "overhead). No Python frames, so per-step analysis is unavailable.")
+    p.add_argument("--clock-log", action="store_true",
+                   help="Sample SM/memory clocks, power and throttle reasons via NVML every 20 ms "
+                        "into clocks.jsonl; rows get epoch start/end times to align with it.")
     p.add_argument("--stages", action="store_true",
                    help="Diagnostic run: time every step of a request (bench/stagehook patches the "
                         "pipeline's profiler targets; modal_app parses the log into stage_log.json). "
@@ -96,9 +102,12 @@ def collect_env(args: argparse.Namespace) -> dict:
         # defaults (platform-default attention backend, prefix KV stored in the native dtype).
         "runtime_config": {"diffusion_attention_config": None, "prefix_kv_cache_dtype": None,
                            "diffusion_kv_cache_dtype": None},
+        "cpu_model": sh("grep -m1 'model name' /proc/cpuinfo"),
+        "nproc": sh("nproc"),
         "workload": {k: getattr(args, k) for k in
                      ["mode", "prompt", "image", "height", "width", "steps", "seed",
-                      "true_cfg_scale", "enforce_eager", "warmup", "feasibility", "measured", "trace", "mem", "stages"]},
+                      "true_cfg_scale", "enforce_eager", "warmup", "feasibility", "measured", "trace",
+                      "trace_light", "clock_log", "mem", "stages"]},
     }
 
 
@@ -127,8 +136,50 @@ class GpuMemSampler:
         self._t.join()
 
 
+class ClockSampler:
+    """Polls device 0 via NVML: SM/memory clocks, power, temperature, throttle reasons."""
+
+    def __init__(self, interval: float = 0.02):
+        self.interval, self.rows, self._stop = interval, [], threading.Event()
+        self._t = threading.Thread(target=self._loop, daemon=True)
+
+    def _loop(self):
+        try:
+            import pynvml
+        except ImportError:
+            from vllm.third_party import pynvml
+        pynvml.nvmlInit()
+        h = pynvml.nvmlDeviceGetHandleByIndex(0)
+        reasons = (getattr(pynvml, "nvmlDeviceGetCurrentClocksEventReasons", None)
+                   or pynvml.nvmlDeviceGetCurrentClocksThrottleReasons)
+        while not self._stop.is_set():
+            row = {"t": time.time()}
+            for key, fn in (
+                ("sm_mhz", lambda: pynvml.nvmlDeviceGetClockInfo(h, pynvml.NVML_CLOCK_SM)),
+                ("mem_mhz", lambda: pynvml.nvmlDeviceGetClockInfo(h, pynvml.NVML_CLOCK_MEM)),
+                ("power_w", lambda: pynvml.nvmlDeviceGetPowerUsage(h) / 1000),
+                ("temp_c", lambda: pynvml.nvmlDeviceGetTemperature(h, pynvml.NVML_TEMPERATURE_GPU)),
+                ("reasons", lambda: reasons(h)),
+            ):
+                try:
+                    row[key] = fn()
+                except Exception:  # noqa: BLE001
+                    row[key] = None
+            self.rows.append(row)
+            time.sleep(self.interval)
+
+    def __enter__(self):
+        self._t.start()
+        return self
+
+    def __exit__(self, *exc):
+        self._stop.set()
+        self._t.join()
+
+
 def main() -> None:
     args = parse_args()
+    args.trace = args.trace or args.trace_light
     if args.mem:
         os.environ["VLLM_LOGGING_LEVEL"] = "DEBUG"  # before vllm is imported; inherited by engine workers
     if args.prompt is None:
@@ -152,15 +203,19 @@ def main() -> None:
     if args.enforce_eager:
         omni_kwargs["enforce_eager"] = True
     if args.trace:
+        heavy = not args.trace_light
         omni_kwargs["profiler_config"] = {
             "profiler": "torch",
             "torch_profiler_dir": str(out / "trace"),
             "torch_profiler_use_gzip": True,
-            "torch_profiler_record_shapes": True,
-            "torch_profiler_with_stack": True,
-            "torch_profiler_with_memory": True,
+            "torch_profiler_record_shapes": heavy,
+            "torch_profiler_with_stack": heavy,
+            "torch_profiler_with_memory": heavy,
             "active_iterations": 1,
         }
+    clocks = ClockSampler() if args.clock_log else None
+    if clocks:
+        clocks.__enter__()
 
     t0 = time.perf_counter()
     with GpuMemSampler() as init_mem:
@@ -209,9 +264,11 @@ def main() -> None:
             omni.start_profile()
         try:
             with GpuMemSampler() as mem:
+                row["t_start"] = time.time()
                 t = time.perf_counter()
                 outputs = omni.generate(prompt, sampling_params_list=[make_params()])
                 row["wall_s"] = time.perf_counter() - t
+                row["t_end"] = time.time()
             row["device_used_peak_mib"] = mem.peak_mib
             o = outputs[0]
             row["stage_durations_s"] = dict(getattr(o, "stage_durations", {}) or {})
@@ -235,6 +292,10 @@ def main() -> None:
         print(json.dumps(row), flush=True)
         runs_f.write(json.dumps(row) + "\n")
         runs_f.flush()
+
+    if clocks:
+        clocks.__exit__(None, None, None)
+        (out / "clocks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in clocks.rows))
 
     measured = [json.loads(l) for l in (out / "runs.jsonl").read_text().splitlines()]
     measured = [r for r in measured if r["phase"] == "measured" and not r.get("error")]

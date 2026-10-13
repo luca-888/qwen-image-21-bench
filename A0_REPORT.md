@@ -121,7 +121,7 @@ These proportions come from profiled runs, which are slower. Analysis: `python3 
 
 <img src="figures/a0_step_gpu_busy.svg" width="760" alt="GPU busy time per denoising step, T2I vs edit. Edit step 0 is 276.3 ms; steps 1–49 average 145.7 ms for edit and 132.0 ms for T2I.">
 
-- In T2I eager mode, about **8% of each step is GPU idle** (143.6 ms unprofiled wall vs 132.0 ms of kernel time in the profiled run; both runs used the same GPU, `GPU-42ae650a`). With about 1,830 launches per step this is consistent with launch/host overhead, but the trace does not separate launch cost from other host-side gaps. It is the headroom CUDA Graph and compile (A2) would target.
+- In T2I eager mode, **roughly 4–8% of each step is GPU idle; the 8% from this run is likely an overestimate.** The estimate subtracts the profiled kernel-time sum (132.0 ms) from the unprofiled step time (143.6 ms; both runs used the same GPU, `GPU-42ae650a`). This profiled run was CPU-bound: with stack, shape and memory recording, a traced step took 174 ms, so the GPU waited on the host for about a quarter of each step. At full load the H200 runs at its 700 W power cap (see the 2026-10-13 corrections), so kernels likely ran faster in this trace than in unprofiled runs, which shrinks the kernel sum and inflates the estimate. The independent rerun in the [A0 cross-review](https://github.com/Dmaner/qwen-image-21-bench/blob/main/A0_REVIEW.md), whose trace was not CPU-bound, has the same step time (143.35 ms) and 137.7 ms of kernels, about 4%. With about 1,830 launches per step the idle time is consistent with launch/host overhead, but the trace does not separate launch cost from other host-side gaps. It is the headroom CUDA Graph and compile (A2) would target; A2 should measure it from busy intervals within one trace rather than reuse this figure.
 - With a short T2I prompt, **prefix prefill is negligible**: step 0 costs the same as the other steps.
 - With one reference image, prefill adds **about 131 ms once** (step 0). Every later step is **about 14 ms slower** because attention runs over the longer cached prefix. Edit attention kernel time doubles (626 → 1,230 ms over 50 steps). Together these account for most of the +0.82 s `diffuse` difference.
 
@@ -166,7 +166,7 @@ All values are binary units (1 GiB = 1024³ bytes).
 1. **Denoising is 96–97% of end-to-end latency.** Within it:
    - GEMM is about half of GPU time.
    - **Elementwise/copy kernels are about a third**, which points to fusion (A1). This is H200 eager mode. #7945 measured a fusion-only gain on A100 with offload, a different configuration.
-   - The GPU is idle for about 8% of wall time in eager mode, consistent with launch/host overhead, which points to graph/compile (A2).
+   - The GPU is idle for roughly 4–8% of wall time in eager mode (8% from this run is likely an overestimate; see section 3), consistent with launch/host overhead, which points to graph/compile (A2).
 2. **For editing**, the extra cost is the reference-image prefix: a one-time ~131 ms prefill plus ~14 ms per step of longer attention. That is the workload for A3/B2.
 3. **Peak memory is set by VAE decode**, not by denoising: +6.6 GiB over the 30.3 GiB that stays allocated between requests. VAE tiling is the lever here (C2).
 4. Everything outside denoising (pre-processing, prompt and image encoding, VAE decode, post-processing) totals 3.1% of a T2I request and 4.7% of an edit request; no single step exceeds 1.6%. Response encoding on the serving path adds at most 1.4%.
@@ -190,3 +190,9 @@ All values are binary units (1 GiB = 1024³ bytes).
 - Pixel identity between serving and offline outputs is now checked by `bench/check_pixels.py`.
 - Added the environment difference from the published run and the four published eager times in #8099.
 - Added the attention backend and the cache dtype to the setup table. No rerun; the existing `env.json` files were not edited, and new runs record the requested values under `runtime_config`.
+
+## Corrections (2026-10-13)
+
+- GPU idle per T2I eager step revised from about 8% to roughly 4–8%, with 8% likely an overestimate (section 3). The profiled run behind the 132.0 ms kernel sum was CPU-bound (174 ms per traced step against 143.6 ms unprofiled), and the H200 is power-capped at full load, so kernels timed while the GPU waited on the host are likely shorter than in unprofiled runs. The A0 cross-review's trace, which was not CPU-bound, gives about 4%.
+- Follow-up runs `results/20261013T042354Z_a0idle_t2i_h200_time` and `results/20261013T045815Z_a0idle_t2i_h200_time` (`modal run --detach modal_app.py::idle_check`, NVML sampled every 20 ms in `clocks.jsonl`; run with the default engine configuration, before `runtime_config` was added to `env.json`): untraced T2I on two other H200s (driver 610.57.04) reproduces the step time at 142.8 and 141.6 ms. The power cap was active in 97–98% of samples during the measured requests, at a median of about 695 W against a 700 W limit, with SM clocks at about 1,710 and 1,740 MHz (maximum 1,980 MHz). The cooler GPU (55 °C vs 62 °C) clocked 1.7% higher and ran 0.8% faster per step.
+- The planned same-GPU comparison of kernel time under A0's profiler settings versus a light profiler (no stack, shapes or memory) did not complete: the Modal runs were cancelled before the traces were saved. The size of the profiler bias is therefore not measured directly.

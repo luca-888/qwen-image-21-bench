@@ -7,6 +7,7 @@ Usage:
     modal run modal_app.py::a0 --mode t2i --mem           # separate run: reserved/allocated peaks per request
     modal run modal_app.py::a0 --mode t2i --stages        # separate run: every step of a request timed
     modal run modal_app.py::a0 --mode edit --image inputs/qwen_bear.png
+    modal run --detach modal_app.py::idle_check           # GPU-idle follow-up: untraced / A0 trace / light trace, NVML clocks
     modal volume get qwen21-results <run_id> results/      # pull results locally
 """
 
@@ -147,6 +148,9 @@ def precheck() -> None:
         "print('imports ok')",
     ], check=True)
     subprocess.run(["python3", "/root/bench/a0_offline.py", "--help"], check=True, capture_output=True)
+    # --clock-log samples clocks through NVML.
+    subprocess.run(["python3", "-c", "try:\n import pynvml\nexcept ImportError:\n from vllm.third_party import pynvml\n"
+                    "print('pynvml', pynvml.__file__)"], check=True)
     # --stages relies on bench/stagehook patching the pipeline module at import.
     subprocess.run([
         "python3", "-c",
@@ -233,6 +237,46 @@ def serving(gpu: str = "H200", eager: bool = True):
     args = ["--warmup", "1", "--feasibility", "1", "--measured", "2"] + (["--enforce-eager"] if eager else [])
     fn = run_bench if gpu == "H200" else run_bench.with_options(gpu=gpu)
     print(fn.remote(args, run_id, "a0_serving.py"))
+
+
+@app.function(volumes=VOLUMES, secrets=SECRETS, timeout=2 * 3600, gpu="H200")
+def idle_check_run(stamp: str) -> list[str]:
+    """A0 GPU-idle follow-up: four T2I runs on one GPU, each in its own engine, with NVML clock logs.
+
+    untraced → A0 trace settings (stack/shapes/memory) → light trace → untraced again (drift check).
+    """
+    common = ["--model", MODEL_ID, "--model-revision", MODEL_REVISION, "--vllm-omni-sha", VLLM_OMNI_SHA,
+              "--mode", "t2i", "--enforce-eager", "--warmup", "1", "--clock-log"]
+    runs = [
+        ("time", ["--feasibility", "1", "--measured", "2"]),
+        ("trace", ["--trace"]),
+        ("tracelight", ["--trace-light"]),
+        ("time2", ["--feasibility", "1", "--measured", "2"]),
+    ]
+    out_dirs = []
+    try:
+        for name, extra in runs:
+            out_dir = f"{RESULTS}/{stamp}_a0idle_t2i_h200_{name}"
+            out_dirs.append(out_dir)
+            cmd = ["python3", "/root/bench/a0_offline.py", *common, "--out", out_dir, *extra]
+            print("+", " ".join(cmd), flush=True)
+            subprocess.run(cmd, check=True)
+            results_volume.commit()
+        for out_dir in out_dirs:
+            for tr in sorted(Path(out_dir).glob("trace/**/*.json.gz")):
+                print(f"== analyze {tr}", flush=True)
+                subprocess.run(["python3", "/root/bench/analyze_trace.py", str(tr),
+                                "--json", f"{out_dir}/trace_analysis.json"], check=True)
+    finally:
+        results_volume.commit()
+    return out_dirs
+
+
+@app.local_entrypoint()
+def idle_check():
+    stamp = _stamp()
+    print("\n".join(idle_check_run.remote(stamp)))
+    print(f"fetch with: modal volume get qwen21-results / results/  (runs prefixed {stamp}_a0idle)")
 
 
 @app.local_entrypoint()

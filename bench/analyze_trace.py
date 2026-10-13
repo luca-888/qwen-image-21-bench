@@ -135,6 +135,23 @@ def main() -> None:
     out["kernels"]["total_gpu_ms"] = total / 1e3
     out["kernels"]["count"] = len(gpu)
 
+    # GPU-timeline view, independent of Python frames (works for traces without stacks).
+    # The duration sum above double-counts overlapping kernels; the union does not.
+    iv = sorted((e["ts"], e["ts"] + e["dur"]) for e in events
+                if e.get("cat") in ("kernel", "gpu_memcpy", "gpu_memset"))
+    union, cur_a, cur_b = 0.0, None, None
+    for a, b in iv:
+        if cur_b is None or a > cur_b:
+            if cur_b is not None:
+                union += cur_b - cur_a
+            cur_a, cur_b = a, b
+        else:
+            cur_b = max(cur_b, b)
+    if cur_b is not None:
+        union += cur_b - cur_a
+    out["kernels"]["busy_union_ms"] = union / 1e3
+    out["kernels"]["gpu_span_ms"] = (iv[-1][1] - iv[0][0]) / 1e3 if iv else 0.0
+
     # ---- human-readable report
     print("== Phases (profiled run; use proportions)")
     pf = out["phases"].get("pipeline_forward", {}).get("gpu_busy_ms") or 1.0
@@ -153,6 +170,9 @@ def main() -> None:
     print("== Kernel categories")
     for k, v in out["kernels"]["by_category"].items():
         print(f"  {k:18s} {v['ms']:9.1f} ms  {v['pct']:5.1f}%  n={v['n']}")
+    k = out["kernels"]
+    print(f"== GPU timeline: span {k['gpu_span_ms']:.1f} ms, busy union {k['busy_union_ms']:.1f} ms, "
+          f"duration sum {k['total_gpu_ms']:.1f} ms")
     print("== Top kernels")
     for t in out["kernels"]["top"][:8]:
         print(f"  {t['ms']:9.1f} ms {t['pct']:5.1f}%  n={t['n']:6d}  {t['name']}")
